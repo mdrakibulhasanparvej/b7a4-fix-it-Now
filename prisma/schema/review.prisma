@@ -1,0 +1,12 @@
+model Review {
+  id           String @id @default(uuid())
+  bookingId    String @unique
+  customerId   String
+  technicianId String
+  rating       Int
+  comment      String?
+
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  customer   User    @relation("ReviewCustomer", fields: [customerId], references: [id])
+  technician User    @relation("ReviewTechnician", fields: [technicianId], references: [id])
+}

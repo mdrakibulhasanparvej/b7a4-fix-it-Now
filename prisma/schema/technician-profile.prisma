@@ -1,0 +1,9 @@
+model TechnicianProfile {
+  id              String  @id @default(uuid())
+  userId          String  @unique
+  bio             String?
+  experienceYears Int?
+  availability    Json?
+
+  user User @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs (Vercel নিজে বিল্ড করবে)
+dist/
+build/
+.next/
+out/
+
+# Environment variables (খুবই গুরুত্বপূর্ণ!)
+.env
+.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Prisma (আপনি যদি নিজে জেনারেট করেন)
+# যদি prisma client সার্ভারে অটো-জেনারেট হয়, তবে এটি ইগনোর করা ভালো
+/node_modules/.prisma/
+
+# Editor settings
+.vscode/
+.idea/

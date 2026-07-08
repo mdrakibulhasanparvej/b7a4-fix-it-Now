@@ -1,0 +1,17 @@
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CUSTOMER)
+  isBanned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  technicianProfile   TechnicianProfile?
+  services            Service[]
+  customerBookings    Booking[]     @relation("CustomerBookings")
+  technicianBookings  Booking[]     @relation("TechnicianBookings")
+  reviewsAsCustomer   Review[]      @relation("ReviewCustomer")
+  reviewsAsTechnician Review[]      @relation("ReviewTechnician")
+  payments            Payment[]
+}
