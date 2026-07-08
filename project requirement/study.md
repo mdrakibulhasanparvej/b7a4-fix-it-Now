@@ -16,15 +16,15 @@
 7. [Middlewares / মিডলওয়্যার](#7-middlewares)
 8. [Route Index / রুট ইনডেক্স](#8-route-index)
 9. [Auth Module / অথ মডিউল](#9-auth-module)
-10. [Category Module / ক্যাটাগরি মডিউল](#10-category-module)
-11. [Service Module / সার্ভিস মডিউল](#11-service-module)
-12. [Technician Module / টেকনিশিয়ান মডিউল](#12-technician-module)
-13. [Booking Module / বুকিং মডিউল](#13-booking-module)
-14. [Payment Module / পেমেন্ট মডিউল](#14-payment-module)
-15. [Review Module / রিভিউ মডিউল](#15-review-module)
-16. [Admin Module / অ্যাডমিন মডিউল](#16-admin-module)
-17. [Seed Script / সিড স্ক্রিপ্ট](#17-seed-script)
-18. [Swagger / সোয়াগার](#18-swagger)
+10. [User Module / ইউজার মডিউল](#10-user-module)
+11. [Category Module / ক্যাটাগরি মডিউল](#11-category-module)
+12. [Service Module / সার্ভিস মডিউল](#12-service-module)
+13. [Technician Module / টেকনিশিয়ান মডিউল](#13-technician-module)
+14. [Booking Module / বুকিং মডিউল](#14-booking-module)
+15. [Payment Module / পেমেন্ট মডিউল](#15-payment-module)
+16. [Review Module / রিভিউ মডিউল](#16-review-module)
+17. [Admin Module / অ্যাডমিন মডিউল](#17-admin-module)
+18. [Seed Script / সিড স্ক্রিপ্ট](#18-seed-script)
 
 ---
 
@@ -48,11 +48,12 @@ FixItNow একটি **ব্যাকএন্ড API** যা হোম স�
 |------------|-------------------|
 | **Node.js + Express 5** | Server framework |
 | **TypeScript** | Type safety |
-| **PostgreSQL + Prisma** | Database + ORM |
-| **JWT** | Authentication |
+| **PostgreSQL + Prisma 7** | Database + ORM |
+| **JWT** | Authentication (access + refresh tokens) |
 | **Stripe** | Payment processing |
-| **Zod** | Input validation |
-| **Swagger** | API documentation |
+| **Custom Validation** | Input validation (rule-based, not Zod) |
+| **bcryptjs** | Password hashing |
+| **http-status** | HTTP status code constants |
 
 ---
 
@@ -63,55 +64,41 @@ FixItNow একটি **ব্যাকএন্ড API** যা হোম স�
 ```json
 {
   "type": "module",
-  "main": "dist/src/server.js",
+  "main": "server.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsx src/server.ts",
+    "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "express": "^5.2.1",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "http-status": "^2.1.0",
     "jsonwebtoken": "^9.0.3",
-    "stripe": "^22.3.0",
-    "zod": "^4.4.3",
-    "swagger-jsdoc": "^6.3.0",
-    "swagger-ui-express": "^5.0.1",
-    "tsx": "^4.19.0"
+    "pg": "^8.22.0",
+    "stripe": "^22.3.0"
   }
 }
 ```
 
-**Line by line explanation / লাইন ধরে ব্যাখ্যা:**
+**Key differences from common patterns / সাধারণ প্যাটার্ন থেকে পার্থক্য:**
 
-| Line | English | বাংলা |
-|------|---------|-------|
-| `"type": "module"` | Tells Node.js to use ES Modules (import/export) instead of CommonJS (require) | Node.js কে ES Modules ব্যবহার করতে বলে, CommonJS না |
-| `"main": "dist/src/server.js"` | Points to the compiled entry file | কম্পাইল করা এন্ট্রি ফাইল নির্দেশ করে |
-| `"build": "tsc"` | Compiles TypeScript to JavaScript | TypeScript কে JavaScript এ কম্পাইল করে |
-| `"start": "tsx src/server.ts"` | Runs server directly with tsx (TypeScript executor) | tsx দিয়ে সরাসরি সার্ভার চালায় |
-| `"dev": "tsx watch src/server.ts"` | Runs server in watch mode (auto-restart on changes) | ওয়াচ মোডে সার্ভার চালায় (ফাইল পরিবর্তনে অটো-রিস্টার্ট) |
-| `"prisma:seed": "tsx prisma/seed.ts"` | Seeds database with initial data (admin user) | ডাটাবেসে প্রাথমিক ডাটা দেয় (অ্যাডমিন ইউজার) |
-
-**Dependencies explained / ডিপেন্ডেন্সি ব্যাখ্যা:**
-
-| Package | Purpose (English) | উদ্দেশ্য (বাংলা) |
-|---------|-------------------|-------------------|
-| express | Web framework for routing & middleware | রাউটিং ও মিডলওয়্যারের জন্য ওয়েব ফ্রেমওয়ার্ক |
-| @prisma/client | Database ORM client | ডাটাবেস ORM ক্লায়েন্ট |
-| bcrypt | Password hashing | পাসওয়ার্ড হ্যাশ করা |
-| jsonwebtoken | JWT token creation/verification | JWT টোকেন তৈরি/ভেরিফিকেশন |
-| stripe | Payment processing API | পেমেন্ট প্রসেসিং API |
-| zod | Schema validation | স্কিমা ভ্যালিডেশন |
-| tsx | TypeScript execution for Node.js | Node.js এ TypeScript চালানোর জন্য |
+| Aspect | English | বাংলা |
+|--------|---------|-------|
+| No Zod | Validation uses custom rule-based middleware instead of Zod | ভ্যালিডেশন Zod এর পরিবর্তে কাস্টম রুল-বেসড মিডলওয়্যার ব্যবহার করে |
+| No Swagger | API docs are not auto-generated | API ডক্স অটো-জেনারেট হয় না |
+| bcryptjs | Uses bcryptjs instead of bcrypt (pure JS, no native deps) | bcrypt এর পরিবর্তে bcryptjs ব্যবহার (পিওর JS, নেটিভ ডিপস নেই) |
+| cookie-parser | Parses cookies for token-based auth | টোকেন-ভিত্তিক অথের জন্য কুকি পার্স করে |
+| http-status | Provides named constants like `httpStatus.OK` instead of raw numbers | raw নাম্বারের পরিবর্তে `httpStatus.OK` এর মত নামযুক্ত কনস্ট্যান্ট দেয় |
 
 ---
 
@@ -142,58 +129,70 @@ FixItNow একটি **ব্যাকএন্ড API** যা হোম স�
 |--------|---------|-------|
 | `target: "ES2022"` | Compile to modern JavaScript (ES2022) | আধুনিক JavaScript এ কম্পাইল করবে |
 | `module: "ESNext"` | Keep ES module syntax in output | আউটপুটে ES module সিনট্যাক্স রাখবে |
-| `moduleResolution: "bundler"` | Import resolution like bundlers (no .js needed) | বান্ডলারের মত import রেজলভ করে (.js লাগে না) |
+| `moduleResolution: "bundler"` | Import resolution like bundlers | বান্ডলারের মত import রেজলভ করে |
 | `strict: true` | Enable all strict type checks | সব strict type check চালু করে |
 | `esModuleInterop: true` | Allows default imports from CommonJS modules | CommonJS মডিউল থেকে default import অনুমতি দেয় |
-| `rootDir: "."` | Project root is current directory | প্রজেক্ট রুট হলো বর্তমান ডিরেক্টরি |
-| `outDir: "./dist"` | Compiled files go to `dist/` folder | কম্পাইল করা ফাইল `dist/` ফোল্ডারে যায় |
-| `include: ["src/**/*", "generated/**/*"]` | Compile both source and generated Prisma files | সোর্স এবং জেনারেটেড Prisma ফাইল দুটোই কম্পাইল করে |
+| `declaration: true` | Generate `.d.ts` type declaration files | `.d.ts` টাইপ ডিক্লারেশন ফাইল জেনারেট করে |
+| `sourceMap: true` | Generate `.js.map` files for debugging | ডিবাগিং এর জন্য `.js.map` ফাইল জেনারেট করে |
 
 ---
 
-### `prisma.config.ts`
+### `src/config/index.ts`
 
 ```ts
-import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import dotenv from "dotenv";
+import path from "path";
 
-export default defineConfig({
-  schema: "prisma/schema.prisma",
-  migrations: {
-    path: "prisma/migrations",
-    seed: "tsx prisma/seed.ts",
-  },
-  datasource: {
-    url: env("DATABASE_URL"),
-  },
-});
+dotenv.config({ path: path.join(process.cwd(), ".env") });
+
+export default {
+  port: process.env.PORT || 5050,
+  database_url: process.env.DATABASE_URL,
+  app_url: process.env.APP_URL,
+  bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
+  jwt_access_secret: process.env.JWT_ACCESS_SECRET!,
+  jwt_refresh_secret: process.env.JWT_REFRESH_SECRET!,
+  jwt_access_expiration: process.env.JWT_ACCESS_EXPIRATION!,
+  jwt_refresh_expiration: process.env.JWT_REFRESH_EXPIRATION!,
+};
 ```
 
-| Line | English | বাংলা |
-|------|---------|-------|
-| `import "dotenv/config"` | Load environment variables from `.env` file | `.env` ফাইল থেকে এনভায়রনমেন্ট ভেরিয়েবল লোড করে |
-| `defineConfig({...})` | Prisma configuration object | Prisma কনফিগারেশন অবজেক্ট |
-| `schema: "prisma/schema.prisma"` | Location of Prisma schema file | Prisma schema ফাইলের লোকেশন |
-| `migrations.path` | Where migration files are stored | মাইগ্রেশন ফাইল যেখানে রাখা হয় |
-| `seed: "tsx prisma/seed.ts"` | Command to seed database | ডাটাবেস সিড করার কমান্ড |
-| `url: env("DATABASE_URL")` | Read database URL from environment | এনভায়রনমেন্ট থেকে DATABASE_URL পড়ে |
+| Field | English | বাংলা |
+|-------|---------|-------|
+| `port` | Server port (default 5050) | সার্ভার পোর্ট (ডিফল্ট 5050) |
+| `app_url` | Frontend URL for CORS | CORS এর জন্য ফ্রন্টএন্ড URL |
+| `bcrypt_salt_rounds` | Salt rounds for password hashing | পাসওয়ার্ড হ্যাশিং এর জন্য সল্ট রাউন্ড |
+| `jwt_access_secret` | Secret for signing access tokens (short-lived, ~1d) | অ্যাক্সেস টোকেন সাইন করার সিক্রেট (স্বল্পমেয়াদী, ~1d) |
+| `jwt_refresh_secret` | Secret for signing refresh tokens (long-lived, ~30d) | রিফ্রেশ টোকেন সাইন করার সিক্রেট (দীর্ঘমেয়াদী, ~30d) |
+
+**English**: The config module loads `.env` variables at startup. It serves as a central place so other files don't scatter `process.env` calls everywhere. The `!` (non-null assertion) tells TypeScript "this will exist at runtime."
+
+**বাংলা**: কনফিগ মডিউল স্টার্টআপে `.env` ভেরিয়েবল লোড করে। এটি একটি কেন্দ্রীয় জায়গা যাতে অন্যান্য ফাইল সর্বত্র `process.env` কল না ছড়ায়। `!` (নন-নাল অ্যাসারশন) টাইপস্ক্রিপ্টকে বলে "রানটাইমে এটি থাকবে।"
 
 ---
 
 ## 3. Database Schema / ডাটাবেস স্কিমা
 
-### `prisma/schema.prisma`
+### Schema Organization / স্কিমা অর্গানাইজেশন
+
+The Prisma schema is split into separate files under `prisma/schema/` and combined via the main `schema.prisma` file:
+
+Prisma স্কিমা `prisma/schema/` এর অধীনে আলাদা ফাইলে বিভক্ত এবং প্রধান `schema.prisma` ফাইলের মাধ্যমে একত্রিত:
 
 ```prisma
+// prisma/schema/schema.prisma
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
+```
 
+```prisma
+// prisma/schema/emums.prisma
 enum Role {
   CUSTOMER
   TECHNICIAN
@@ -207,21 +206,20 @@ enum BookingStatus {
   PAID
   IN_PROGRESS
   COMPLETED
+  CANCELLED
 }
 ```
-
-**Enums explained / এনাম ব্যাখ্যা:**
-
-| Enum | English | বাংলা |
-|------|---------|-------|
-| `Role` | Three user roles: CUSTOMER, TECHNICIAN, ADMIN | তিন ধরনের ইউজার রোল |
-| `BookingStatus` | Booking lifecycle statuses | বুকিং এর লাইফসাইকেল স্ট্যাটাস |
 
 **BookingStatus flow / বুকিং স্ট্যাটাস ফ্লো:**
 ```
 REQUESTED → ACCEPTED → PAID → IN_PROGRESS → COMPLETED
-     ↘ DECLINED
+     ↘ DECLINED                      ↑ (customer can cancel)
+     ↘ CANCELLED ← any of REQUESTED, ACCEPTED, PAID
 ```
+
+**English**: `CANCELLED` is an addition to the typical flow. Customers can cancel at REQUESTED, ACCEPTED, or PAID status (before work starts). Once IN_PROGRESS, cancellation is not allowed.
+
+**বাংলা**: সাধারণ ফ্লোতে `CANCELLED` একটি সংযোজন। গ্রাহকরা REQUESTED, ACCEPTED, বা PAID স্ট্যাটাসে বাতিল করতে পারেন (কাজ শুরুর আগে)। IN_PROGRESS হলে বাতিল করা যাবে না।
 
 ---
 
@@ -249,12 +247,10 @@ model User {
 
 | Field | English | বাংলা |
 |-------|---------|-------|
-| `@id @default(uuid())` | Auto-generates a unique UUID for each user | প্রতিটি ইউজারের জন্য ইউনিক UUID অটো-জেনারেট করে |
-| `email @unique` | Email must be unique in the database | ইমেইল ডাটাবেসে ইউনিক হতে হবে |
+| `@id @default(uuid())` | Auto-generates a unique UUID | ইউনিক UUID অটো-জেনারেট করে |
+| `email @unique` | Email must be unique | ইমেইল ইউনিক হতে হবে |
 | `role @default(CUSTOMER)` | Default role is CUSTOMER | ডিফল্ট রোল হলো CUSTOMER |
-| `isBanned @default(false)` | Users are not banned by default | ইউজাররা ডিফল্টভাবে ব্যান করা না |
-| `technicianProfile?` | Optional one-to-one relation with TechnicianProfile | TechnicianProfile এর সাথে অপশনাল ওয়ান-টু-ওয়ান রিলেশন |
-| `services` | One-to-many: a technician can have many services | ওয়ান-টু-ম্যানি: একজন টেকনিশিয়ানের অনেকগুলি সার্ভিস থাকতে পারে |
+| `isBanned @default(false)` | Users are not banned by default | ডিফল্টভাবে ব্যান না |
 
 ---
 
@@ -275,10 +271,9 @@ model TechnicianProfile {
 | Field | English | বাংলা |
 |-------|---------|-------|
 | `userId @unique` | Links to User, must be unique | User এর সাথে লিংক, ইউনিক হতে হবে |
-| `bio?` | Optional biography text | অপশনাল বায়োগ্রাফি টেক্সট |
+| `bio?` | Optional biography | অপশনাল বায়োগ্রাফি |
 | `experienceYears?` | Optional years of experience | অপশনাল বছরের অভিজ্ঞতা |
-| `availability Json?` | Stores availability slots as JSON (e.g. `[{"day":"Monday","slots":["09:00-12:00"]}]`) | JSON আকারে সময়ের স্লট রাখে |
-| `@relation(fields: [userId], references: [id])` | Foreign key to User table | User টেবিলের ফরেন কী |
+| `availability Json?` | Availability slots as JSON array | JSON অ্যারে আকারে সময়ের স্লট |
 
 ---
 
@@ -293,11 +288,6 @@ model Category {
   services Service[]
 }
 ```
-
-| Field | English | বাংলা |
-|-------|---------|-------|
-| `name @unique` | Category name must be unique (e.g. "Plumbing") | ক্যাটাগরি নাম ইউনিক হতে হবে |
-| `services` | One-to-many: a category has many services | ওয়ান-টু-ম্যানি: একটি ক্যাটাগরিতে অনেক সার্ভিস |
 
 ---
 
@@ -317,12 +307,6 @@ model Service {
   bookings   Booking[]
 }
 ```
-
-| Field | English | বাংলা |
-|-------|---------|-------|
-| `price Float` | Service price (e.g. 80.50) | সার্ভিসের মূল্য |
-| `categoryId` | Foreign key to Category | Category এর ফরেন কী |
-| `technicianId` | Foreign key to User (who is the technician) | User এর ফরেন কী (যিনি টেকনিশিয়ান) |
 
 ---
 
@@ -345,13 +329,6 @@ model Booking {
 }
 ```
 
-| Field | English | বাংলা |
-|-------|---------|-------|
-| `status @default(REQUESTED)` | Starts as REQUESTED when created | তৈরি হলে REQUESTED থাকে |
-| `scheduleDate?` | Optional scheduled appointment date/time | অপশনাল অ্যাপয়েন্টমেন্ট তারিখ/সময় |
-| `payment?` | Optional one-to-one with Payment | Payment এর সাথে অপশনাল ওয়ান-টু-ওয়ান |
-| `review?` | Optional one-to-one with Review | Review এর সাথে অপশনাল ওয়ান-টু-ওয়ান |
-
 ---
 
 #### Payment Model
@@ -373,9 +350,8 @@ model Payment {
 
 | Field | English | বাংলা |
 |-------|---------|-------|
-| `bookingId @unique` | One booking can have only one payment | একটি বুকিং শুধুমাত্র একটি পেমেন্ট থাকতে পারে |
-| `provider @default("Stripe")` | Payment provider (Stripe) | পেমেন্ট প্রোভাইডার |
-| `transactionId?` | Stripe payment intent ID | Stripe পেমেন্ট ইন্টেন্ট আইডি |
+| `bookingId @unique` | One payment per booking | প্রতি বুকিং এ একটি পেমেন্ট |
+| `provider @default("Stripe")` | Only Stripe supported | শুধুমাত্র Stripe সাপোর্টেড |
 | `status @default("PENDING")` | PENDING → COMPLETED | পেন্ডিং → কমপ্লিটেড |
 
 ---
@@ -397,11 +373,6 @@ model Review {
 }
 ```
 
-| Field | English | বাংলা |
-|-------|---------|-------|
-| `bookingId @unique` | Only one review per booking | প্রতি বুকিং এ শুধুমাত্র একটি রিভিউ |
-| `rating Int` | Rating 1-5 | রেটিং ১-৫ |
-
 ---
 
 ## 4. Entry Points / এন্ট্রি পয়েন্ট
@@ -410,71 +381,74 @@ model Review {
 
 ```ts
 import app from "./app";
-import dotenv from "dotenv";
+import { prisma } from "./lib/prisma";
+import config from "./config/index";
 
-dotenv.config();
+const PORT = config.port;
 
-const port = process.env.PORT || 5060;
+async function main() {
+  try {
+    await prisma.$connect();
+    console.log(`Connected to the database successfully.`);
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Error starting server:", error);
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+}
 
-app.listen(port, () => {
-  console.log(`FixItNow server running on port ${port}`);
-});
+main();
 ```
 
 | Line | English | বাংলা |
 |------|---------|-------|
-| `import app from "./app"` | Import the Express app from app.ts | app.ts থেকে Express app ইম্পোর্ট |
-| `dotenv.config()` | Load `.env` file variables into `process.env` | `.env` ফাইল থেকে ভেরিয়েবল `process.env` এ লোড |
-| `const port = process.env.PORT \|\| 5060` | Use PORT from .env or default 5060 | .env থেকে PORT বা ডিফল্ট 5060 ব্যবহার |
-| `app.listen(port, ...)` | Start server and listen on the port | সার্ভার স্টার্ট করে পোর্টে লিসেন |
+| `prisma.$connect()` | Connect to database before starting server | সার্ভার শুরুর আগে ডাটাবেসে কানেক্ট |
+| `config.port` | Read port from config (env or default 5050) | কনফিগ থেকে পোর্ট পড়ে (env বা ডিফল্ট 5050) |
+| `catch (error)` | If DB connection fails, log error and exit | DB কানেকশন ব্যর্থ হলে, এরর লগ করে এক্সিট |
 
-**English**: This is the entry point. It loads environment variables, creates the port number, and starts the Express server.
+**English**: Unlike the typical pattern, this server first connects to the database, then starts listening. If DB is down, the server doesn't start — this prevents runtime errors.
 
-**বাংলা**: এটি এন্ট্রি পয়েন্ট। এটি এনভায়রনমেন্ট ভেরিয়েবল লোড করে, পোর্ট নাম্বার তৈরি করে এবং Express সার্ভার চালু করে।
+**বাংলা**: সাধারণ প্যাটার্নের থেকে ভিন্ন, এই সার্ভার প্রথমে ডাটাবেসে কানেক্ট হয়, তারপর লিসেন শুরু করে। DB ডাউন থাকলে সার্ভার স্টার্ট হয় না — এটি রানটাইম এরর প্রতিরোধ করে।
 
 ---
 
 ### `src/app.ts`
 
 ```ts
-import express from "express";
+import cookieParser from "cookie-parser";
+import express, { Application, Request, Response } from "express";
+import config from "./config";
 import cors from "cors";
-import swaggerUi from "swagger-ui-express";
 import router from "./routes/index";
-import { swaggerSpec } from "./swagger";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import { notFound } from "./middlewares/notFound";
-import { requestLogger } from "./middlewares/requestLogger";
-import * as paymentController from "./modules/payment/payment.controller";
+import { paymentController } from "./modules/payment/payment.controller";
 
-const app = express();
+const app: Application = express();
 
-app.use(cors());
-app.use(requestLogger);
+app.use(
+  cors({
+    origin: config.app_url,
+  }),
+);
 
 app.post(
   "/api/payments/webhook",
   express.raw({ type: "application/json" }),
-  paymentController.webhook
+  paymentController.webhook,
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.get("/", (_req, res) => {
-  res.json({
-    success: true,
-    message: "FixItNow API is running",
-    docs: "/api-docs",
-    health: "/health",
-    endpoints: { /* ... */ },
-  });
+app.get("/", (_req: Request, res: Response) => {
+  res.send("Hello, World!");
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ success: true, message: "Server is running" });
-});
-
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api", router);
 
 app.use(notFound);
@@ -485,31 +459,24 @@ export default app;
 
 | Line | English | বাংলা |
 |------|---------|-------|
-| `import express from "express"` | Import Express framework | Express ফ্রেমওয়ার্ক ইম্পোর্ট |
-| `import cors from "cors"` | Import CORS middleware (allows cross-origin requests) | CORS মিডলওয়্যার ইম্পোর্ট (ক্রস-অরিজিন রিকোয়েস্ট অনুমতি দেয়) |
-| `import swaggerUi from "swagger-ui-express"` | Import Swagger UI for API docs | API ডক্সের জন্য Swagger UI ইম্পোর্ট |
-| `const app = express()` | Create Express application instance | Express অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি |
-| `app.use(cors())` | Enable CORS for all routes | সব রুটের জন্য CORS চালু |
-| `app.use(requestLogger)` | Log every request (method, URL, timestamp) | প্রতিটি রিকোয়েস্ট লগ করে (মেথড, URL, টাইমস্ট্যাম্প) |
-| `express.raw({ type: "application/json" })` | Raw body parser for Stripe webhook (needs raw body for signature verification) | Stripe webhook এর জন্য raw body পার্সার (সিগনেচার ভেরিফিকেশনের জন্য raw body দরকার) |
-| `app.use(express.json())` | Parse JSON request bodies | JSON রিকোয়েস্ট বডি পার্স করে |
-| `app.get("/", ...)` | Root route — shows API info in browser | রুট রুট — ব্রাউজারে API তথ্য দেখায় |
-| `app.get("/health", ...)` | Health check endpoint | হেলথ চেক এন্ডপয়েন্ট |
-| `app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))` | Serve Swagger documentation at /api-docs | /api-docs এ Swagger ডকুমেন্টেশন সার্ভ করে |
-| `app.use("/api", router)` | Mount all API routes under /api | সব API রুট /api এর আন্ডারে মাউন্ট করে |
-| `app.use(notFound)` | 404 handler — catches unmatched routes | 404 হ্যান্ডলার — অম্যাচড রুট ক্যাচ করে |
-| `app.use(globalErrorHandler)` | Global error handler — catches all errors | গ্লোবাল এরর হ্যান্ডলার — সব এরর ক্যাচ করে |
+| `cookieParser()` | Parses cookies from requests (needed for token auth) | রিকোয়েস্ট থেকে কুকি পার্স করে (টোকেন অথের জন্য প্রয়োজন) |
+| `express.urlencoded({ extended: true })` | Parses URL-encoded form data | URL-এনকোডেড ফর্ম ডাটা পার্স করে |
+| `cors({ origin: config.app_url })` | Restricts CORS to frontend URL only | CORS শুধুমাত্র ফ্রন্টএন্ড URL এ সীমাবদ্ধ |
+| `express.raw({ type: "application/json" })` | Raw body for Stripe webhook (needs raw body for signature verification) | Stripe webhook এর জন্য raw body (সিগনেচার ভেরিফিকেশনের জন্য raw body দরকার) |
 
-**Order matters in Express! / Express এ অর্ডার গুরুত্বপূর্ণ:**
+**Order of middleware / মিডলওয়্যারের অর্ডার:**
 
-1. CORS + Logger (before any request handling)
-2. Stripe webhook route (before JSON parser — needs raw body)
-3. JSON parser (for all other routes)
-4. Root + Health routes
-5. Swagger UI
-6. All API routes (`/api`)
-7. 404 handler (if no route matched)
-8. Error handler (if any error occurred)
+1. CORS
+2. Stripe webhook (before JSON parser — needs raw body)
+3. JSON parser + URL-encoded parser + Cookie parser
+4. Root route
+5. All API routes (`/api`)
+6. 404 handler (notFound)
+7. Error handler (globalErrorHandler)
+
+**English**: Notice there is no Swagger, no health check endpoint, and no request logger. This is a minimal Express setup. The Stripe webhook must come BEFORE `express.json()` because it needs the raw body for signature verification.
+
+**বাংলা**: লক্ষ্য করুন কোন Swagger, হেলথ চেক এন্ডপয়েন্ট, বা রিকোয়েস্ট লগার নেই। এটি একটি মিনিমাল Express সেটআপ। Stripe webhook অবশ্যই `express.json()` এর **আগে** আসতে হবে কারণ সিগনেচার ভেরিফিকেশনের জন্য raw body দরকার।
 
 ---
 
@@ -518,22 +485,24 @@ export default app;
 ### `src/utils/catchAsync.ts`
 
 ```ts
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 
-export const catchAsync = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    fn(req, res, next).catch(next);
+export const catchAsync = (fn: RequestHandler) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await fn(req, res, next);
+    } catch (error) {
+      next(error);
+    }
   };
 };
 ```
 
-**English**: This is a wrapper function for async route handlers. In Express, if an async function throws an error, it won't be caught automatically — Express needs the error to be passed to `next()`. `catchAsync` wraps every async handler so if it throws, the error is caught and forwarded to the global error handler via `next(err)`.
+**English**: Wraps async route handlers so thrown errors are caught and forwarded to Express error handler. Uses a `try/catch` block internally.
 
-**বাংলা**: এটি async রুট হ্যান্ডলারদের জন্য একটি র‍্যাপার ফাংশন। Express এ, যদি একটি async ফাংশন এরর থ্রো করে, সেটি অটোমেটিক্যালি ক্যাচ হয় না — Express কে `next()` এর মাধ্যমে এরর পাঠাতে হয়। `catchAsync` প্রতিটি async হ্যান্ডলারকে র‍্যাপ করে যাতে এরর থ্রো করলে সেটি ক্যাচ হয়ে `next(err)` এর মাধ্যমে গ্লোবাল এরর হ্যান্ডলারে যায়।
+**বাংলা**: async রুট হ্যান্ডলারদের র‍্যাপ করে যাতে থ্রো করা এরর ক্যাচ হয়ে Express এরর হ্যান্ডলারে ফরওয়ার্ড হয়। ভিতরে `try/catch` ব্লক ব্যবহার করে।
 
-**Pattern / প্যাটার্ন**: Every controller function is wrapped like:
+**Pattern / প্যাটার্ন**:
 ```ts
 export const getAll = catchAsync(async (req, res) => { ... });
 ```
@@ -545,87 +514,137 @@ export const getAll = catchAsync(async (req, res) => { ... });
 ```ts
 import { Response } from "express";
 
-export const sendResponse = <T>(
-  res: Response,
-  statusCode: number,
-  message: string,
-  data: T
-) => {
-  res.status(statusCode).json({
-    success: true,
-    message,
-    data,
+type TMeta = {
+  page: number;
+  limit: number;
+  total: number;
+};
+
+type TResponseData<T> = {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data?: T;
+  meta?: TMeta;
+};
+
+export const sendResponse = <T>(res: Response, data: TResponseData<T>) => {
+  res.status(data.statusCode).json({
+    success: data.success,
+    statusCode: data.statusCode,
+    message: data.message,
+    data: data.data,
+    meta: data.meta,
   });
 };
 ```
 
-| Part | English | বাংলা |
-|------|---------|-------|
-| `<T>` | Generic type — works with any data type | জেনেরিক টাইপ — যেকোন ডাটা টাইপের সাথে কাজ করে |
-| `statusCode` | HTTP status code (200, 201, etc.) | HTTP স্ট্যাটাস কোড |
-| `message` | Human-readable message | মানুষের পড়ার উপযোগী মেসেজ |
-| `data` | The actual response data | প্রকৃত রেসপন্স ডাটা |
-| `res.status(code).json(...)` | Set status and send JSON response | স্ট্যাটাস সেট করে JSON রেসপন্স পাঠায় |
+**English**: Takes a **single object** parameter with `success`, `statusCode`, `message`, `data`, and optional `meta`. This is different from the common pattern where these are separate arguments. The `meta` field supports pagination.
+
+**বাংলা**: একটি **একক অবজেক্ট** প্যারামিটার নেয় যাতে `success`, `statusCode`, `message`, `data`, এবং অপশনাল `meta` থাকে। এটি সাধারণ প্যাটার্ন থেকে ভিন্ন যেখানে এগুলো আলাদা আর্গুমেন্ট হয়। `meta` ফিল্ড পেজিনেশন সাপোর্ট করে।
 
 **Response format / রেসপন্স ফরম্যাট:**
 ```json
 {
   "success": true,
+  "statusCode": 200,
   "message": "Users fetched successfully",
-  "data": [ ... ]
+  "data": [ ... ],
+  "meta": { "page": 1, "limit": 10, "total": 50 }
 }
 ```
 
-This ensures **consistent response format** across all endpoints.
+---
 
-এটি সব এন্ডপয়েন্টে **অভিন্ন রেসপন্স ফরম্যাট** নিশ্চিত করে।
+### `src/utils/jwt.ts`
+
+```ts
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+const createToken = (payload: JwtPayload, secret: string, expiresIn: string | number) => {
+  const token = jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
+  return token;
+};
+
+const verifyToken = (token: string, secret: string) => {
+  try {
+    const verifiedToken = jwt.verify(token, secret) as JwtPayload;
+    return { success: true, data: verifiedToken };
+  } catch (error: any) {
+    console.error("Token verification failed:", error);
+    return { success: false, message: error.message || "Token verification failed" };
+  }
+};
+
+export const jwtUtils = { createToken, verifyToken };
+```
+
+| Function | English | বাংলা |
+|----------|---------|-------|
+| `createToken` | Signs a JWT with payload, secret, and expiration | পেলোড, সিক্রেট এবং এক্সপায়ারেশন সহ JWT সাইন করে |
+| `verifyToken` | Verifies JWT, returns `{ success, data }` or `{ success, message }` | JWT ভেরিফাই করে, `{ success, data }` বা `{ success, message }` রিটার্ন করে |
+
+**English**: Unlike the common pattern where `jwt.verify` throws on failure, this wraps it in try/catch and returns a consistent response object. The caller checks `verifiedToken.success` instead of using try/catch.
+
+**বাংলা**: সাধারণ প্যাটার্নের থেকে ভিন্ন যেখানে `jwt.verify` ব্যর্থ হলে থ্রো করে, এটি try/catch এ র‍্যাপ করে এবং একটি কনসিস্টেন্ট রেসপন্স অবজেক্ট রিটার্ন করে। কলার try/catch ব্যবহার না করে `verifiedToken.success` চেক করে।
 
 ---
 
-### `src/utils/prismaClient.ts`
+### `src/lib/prisma.ts`
 
 ```ts
-import dotenv from "dotenv";
-dotenv.config();
-
-import { PrismaClient } from "../../generated/prisma/client";
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../generated/prisma/client";
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set in environment variables");
+}
+
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-export default prisma;
+export { prisma };
 ```
 
 | Line | English | বাংলা |
 |------|---------|-------|
-| `dotenv.config()` | Load .env file BEFORE importing Prisma (needs DATABASE_URL) | Prisma ইম্পোর্টের আগে .env লোড করে (DATABASE_URL দরকার) |
-| `PrismaClient` | The Prisma ORM client to query database | Prisma ORM ক্লায়েন্ট যা ডাটাবেসে কোয়েরি করে |
+| `import "dotenv/config"` | Load .env BEFORE importing Prisma | Prisma ইম্পোর্টের আগে .env লোড করে |
 | `PrismaPg` | PostgreSQL adapter for Prisma | Prisma এর জন্য PostgreSQL অ্যাডাপ্টার |
-| `process.env.DATABASE_URL!` | `!` tells TypeScript "trust me, this is not undefined" | `!` টাইপস্ক্রিপ্টকে বলে "বিশ্বাস কর, এটি undefined না" |
-| `export default prisma` | Export single instance (singleton pattern) — one connection reused everywhere | একক instance এক্সপোর্ট (সিঙ্গেলটন প্যাটার্ন) — এক কানেকশন সব জায়গায় ব্যবহার হয় |
+| `if (!connectionString)` | Early error if DATABASE_URL missing | DATABASE_URL না থাকলে আগেই এরর |
+| `export { prisma }` | Named export (not default) used everywhere | named export (ডিফল্ট না) যা সর্বত্র ব্যবহার হয় |
 
-**English**: This creates a single Prisma client instance. The `!` after `process.env.DATABASE_URL` is TypeScript's "non-null assertion" — we know it exists because .env has it. Using a single instance (singleton pattern) is important for connection pooling.
+**English**: This creates a single Prisma client instance. The `!` (non-null assertion) is NOT used here — instead there's an explicit check. Named export `{ prisma }` is used instead of `export default`.
 
-**বাংলা**: এটি একটি একক Prisma client instance তৈরি করে। `process.env.DATABASE_URL` এর পরে `!` হল TypeScript এর "non-null assertion" — আমরা জানি এটি আছে কারণ .env এ এটি আছে। একক instance ব্যবহার (সিঙ্গেলটন প্যাটার্ন) কানেকশন পুলিং এর জন্য গুরুত্বপূর্ণ।
+**বাংলা**: এটি একটি একক Prisma client instance তৈরি করে। এখানে `!` (নন-নাল অ্যাসারশন) ব্যবহার করা হয়নি — বরং একটি স্পষ্ট চেক আছে। `export default` এর পরিবর্তে named export `{ prisma }` ব্যবহার করা হয়।
 
 ---
 
 ### `src/utils/stripe.ts`
 
 ```ts
-import dotenv from "dotenv";
-dotenv.config();
-
+import "dotenv/config";
 import Stripe from "stripe";
 
-export const stripe: Stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+let stripeInstance: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error("STRIPE_SECRET_KEY is not configured in environment variables");
+    }
+    stripeInstance = new Stripe(key);
+  }
+  return stripeInstance;
+}
 ```
 
-**English**: Creates a Stripe client instance using the secret key from .env. This is used in the payment module to create payment intents, confirm payments, and handle webhooks.
+**English**: Uses the **singleton pattern** with a lazy-initialized `getStripe()` function. The Stripe instance is created only on first use, not at import time. This is different from the common pattern of `new Stripe(key)` at module level.
 
-**বাংলা**: .env থেকে সিক্রেট কী ব্যবহার করে একটি Stripe ক্লায়েন্ট instance তৈরি করে। এটি পেমেন্ট মডিউলে পেমেন্ট ইন্টেন্ট তৈরি, পেমেন্ট কনফার্ম এবং ওয়েবহুক হ্যান্ডল করতে ব্যবহৃত হয়।
+**বাংলা**: **সিঙ্গেলটন প্যাটার্ন** ব্যবহার করে lazy-initialized `getStripe()` ফাংশনের মাধ্যমে। Stripe instance শুধুমাত্র প্রথম ব্যবহারে তৈরি হয়, ইম্পোর্ট টাইমে নয়। এটি মডিউল লেভেলে `new Stripe(key)` করার সাধারণ প্যাটার্ন থেকে ভিন্ন।
 
 ---
 
@@ -651,21 +670,20 @@ export class AppError extends Error {
 
 | Part | English | বাংলা |
 |------|---------|-------|
-| `class AppError extends Error` | Custom error class that extends built-in Error | বিল্ট-ইন Error ক্লাসকে এক্সটেন্ড করে কাস্টম এরর ক্লাস |
-| `public statusCode: number` | HTTP status code (e.g., 404, 401, 403, 400) | HTTP স্ট্যাটাস কোড |
-| `super(message)` | Call parent Error constructor with message | মেসেজ সহ প্যারেন্ট Error কনস্ট্রাক্টর কল করে |
-| `Error.captureStackTrace(this, this.constructor)` | Captures stack trace for debugging | ডিবাগিং এর জন্য স্ট্যাক ট্রেস ক্যাপচার করে |
+| `class AppError extends Error` | Custom error class extending built-in Error | বিল্ট-ইন Error ক্লাসকে এক্সটেন্ড করে কাস্টম এরর |
+| `public statusCode: number` | HTTP status code | HTTP স্ট্যাটাস কোড |
+| `Error.captureStackTrace` | Captures stack trace for debugging | ডিবাগিং এর জন্য স্ট্যাক ট্রেস ক্যাপচার |
 
-**Usage example / ব্যবহারের উদাহরণ:**
+**Usage / ব্যবহার:**
 ```ts
-throw new AppError(404, "User not found");
-throw new AppError(401, "Invalid credentials");
-throw new AppError(403, "You do not have permission");
+throw new AppError(httpStatus.NOT_FOUND, "User not found");
+throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials");
+throw new AppError(httpStatus.FORBIDDEN, "You do not have permission");
 ```
 
-**English**: This custom error class lets us throw errors with HTTP status codes. The global error handler catches these and sends the appropriate HTTP response.
+**English**: Uses `httpStatus` constants instead of raw numbers (404, 401, 403).
 
-**বাংলা**: এই কাস্টম এরর ক্লাস আমাদের HTTP স্ট্যাটাস কোড সহ এরর থ্রো করতে দেয়। গ্লোবাল এরর হ্যান্ডলার এগুলো ক্যাচ করে উপযুক্ত HTTP রেসপন্স পাঠায়।
+**বাংলা**: raw নাম্বার (404, 401, 403) এর পরিবর্তে `httpStatus` কনস্ট্যান্ট ব্যবহার করে।
 
 ---
 
@@ -674,79 +692,161 @@ throw new AppError(403, "You do not have permission");
 ### `src/middlewares/auth.ts`
 
 ```ts
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { AppError } from "../errors/AppError";
+import { NextFunction, Request, Response } from "express";
+import { Role } from "../../generated/prisma/enums";
+import { prisma } from "../lib/prisma";
 import { catchAsync } from "../utils/catchAsync";
-import prisma from "../utils/prismaClient";
-
-interface JwtPayload {
-  userId: string;
-  role: string;
-}
+import { jwtUtils } from "../utils/jwt";
+import { AppError } from "../errors/AppError";
+import httpStatus from "http-status";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JwtPayload;
+      user?: {
+        id: string;
+        name: string;
+        email: string;
+        role: Role;
+      };
     }
   }
 }
-```
 
-**English**: This middleware handles authentication and authorization. It:
-1. Extracts JWT token from `Authorization: Bearer <token>` header
-2. Verifies the token using `JWT_SECRET`
-3. Checks if the user exists and is not banned
-4. Checks if the user's role is allowed for this route
-5. Attaches `req.user` with `{ userId, role }` for downstream use
+export const auth = (...requiredRoles: Role[]) => {
+  return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
+    const token = req.cookies.accessToken
+      ? req.cookies.accessToken
+      : req.headers.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : req.headers.authorization;
 
-The `declare global` block adds a `user` property to Express's `Request` type so TypeScript knows about it.
-
-**বাংলা**: এই মিডলওয়্যার অথেনটিকেশন এবং অথরাইজেশন হ্যান্ডল করে। এটি:
-1. `Authorization: Bearer <token>` হেডার থেকে JWT টোকেন বের করে
-2. `JWT_SECRET` ব্যবহার করে টোকেন ভেরিফাই করে
-3. ইউজার আছে কিনা এবং ব্যান করা নেই কিনা চেক করে
-4. ইউজারের রোল এই রুটের জন্য অনুমোদিত কিনা চেক করে
-5. `req.user` এ `{ userId, role }` অ্যাটাচ করে পরবর্তী ব্যবহারের জন্য
-
-**Key code logic / মূল কোড লজিক:**
-
-```ts
-export const auth = (...allowedRoles: string[]) => {
-  return catchAsync(async (req, res, next) => {
-    // 1. Extract token from "Bearer xxx"
-    const token = req.headers.authorization?.startsWith("Bearer ")
-      ? req.headers.authorization.split(" ")[1]
-      : undefined;
-    if (!token) throw new AppError(401, "You are not authorized");
-
-    // 2. Verify JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-
-    // 3. Check user exists & not banned
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    if (!user) throw new AppError(401, "User not found");
-    if (user.isBanned) throw new AppError(403, "Your account has been banned");
-
-    // 4. Check role permission
-    if (allowedRoles.length && !allowedRoles.includes(decoded.role)) {
-      throw new AppError(403, "You do not have permission");
+    if (!token) {
+      throw new AppError(httpStatus.UNAUTHORIZED, "You are not logged in");
     }
 
-    // 5. Attach user to request
-    req.user = decoded;
+    const verifiedToken = jwtUtils.verifyToken(token, process.env.JWT_ACCESS_SECRET!);
+
+    if (!verifiedToken.success) {
+      throw new AppError(httpStatus.UNAUTHORIZED, verifiedToken.message);
+    }
+
+    const { id, name, email, role } = verifiedToken.data as { id: string; name: string; email: string; role: Role };
+
+    if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
+      throw new AppError(httpStatus.FORBIDDEN, "You do not have permission to access this resource");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new AppError(httpStatus.UNAUTHORIZED, "User not found");
+    }
+
+    if (user.isBanned) {
+      throw new AppError(httpStatus.FORBIDDEN, "Your account has been banned");
+    }
+
+    req.user = { id, name, email, role };
+
     next();
   });
 };
 ```
 
-**Role check examples / রোল চেকের উদাহরণ:**
+**Key differences from common pattern / সাধারণ প্যাটার্ন থেকে মূল পার্থক্য:**
+
+| Aspect | This Code | Common Pattern |
+|--------|-----------|---------------|
+| Token source | Cookie FIRST, then `Authorization` header | Usually only `Authorization` header |
+| `req.user` | `{ id, name, email, role }` | Usually `{ userId, role }` |
+| JWT verify | `jwtUtils.verifyToken()` custom wrapper | `jwt.verify()` directly |
+| Role check | Uses `Role` enum from Prisma | Usually string array |
+
+**Token priority / টোকেন অগ্রাধিকার:**
+1. `req.cookies.accessToken` (highest priority)
+2. `Authorization: Bearer <token>` header
+3. `Authorization: <token>` header (without Bearer)
+
+---
+
+### `src/middlewares/validateRequest.ts`
+
 ```ts
-auth("ADMIN")                    // Only admin
-auth("CUSTOMER")                 // Only customer
-auth("CUSTOMER", "TECHNICIAN")   // Both customer and technician
-auth()                           // Any authenticated user (any role)
+import { Request, Response, NextFunction } from "express";
+import { AppError } from "../errors/AppError";
+import httpStatus from "http-status";
+
+export type ValidationRule = {
+  field: string;
+  required?: boolean;
+  type?: "string" | "number" | "boolean" | "email" | "array" | "object";
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  enum?: string[];
+  message?: string;
+};
+
+export const validateRequest = (rules: ValidationRule[]) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const errors: { field: string; message: string }[] = [];
+
+    for (const rule of rules) {
+      const value = req.body[rule.field];
+
+      if (rule.required && (value === undefined || value === null || value === "")) {
+        errors.push({ field: rule.field, message: rule.message || `${rule.field} is required` });
+        continue;
+      }
+
+      if (value === undefined || value === null) continue;
+
+      if (rule.type === "email") {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          errors.push({ field: rule.field, message: rule.message || `Invalid email format` });
+        }
+      }
+
+      if (rule.type === "string" && typeof value === "string") {
+        if (rule.minLength && value.length < rule.minLength) {
+          errors.push({ field: rule.field, message: rule.message || `${rule.field} must be at least ${rule.minLength} characters` });
+        }
+        if (rule.maxLength && value.length > rule.maxLength) {
+          errors.push({ field: rule.field, message: rule.message || `${rule.field} must be at most ${rule.maxLength} characters` });
+        }
+      }
+
+      if (rule.type === "number") { /* validates min/max */ }
+
+      if (rule.enum && !rule.enum.includes(value)) {
+        errors.push({ field: rule.field, message: rule.message || `${rule.field} must be one of: ${rule.enum.join(", ")}` });
+      }
+    }
+
+    if (errors.length > 0) {
+      return next(new AppError(httpStatus.BAD_REQUEST, errors[0].message));
+    }
+
+    next();
+  };
+};
+```
+
+| Aspect | English | বাংলা |
+|--------|---------|-------|
+| Rule-based | Uses `ValidationRule[]` instead of Zod schema | Zod স্কিমার পরিবর্তে `ValidationRule[]` ব্যবহার করে |
+| First error | Only returns the **first** validation error | শুধুমাত্র **প্রথম** ভ্যালিডেশন এরর রিটার্ন করে |
+| No async | Synchronous validation (no `.parseAsync()`) | সিনক্রোনাস ভ্যালিডেশন (কোন `.parseAsync()` নেই) |
+
+**Example validation rules / ভ্যালিডেশন রুলের উদাহরণ:**
+```ts
+const loginRules: ValidationRule[] = [
+  { field: "email", required: true, type: "email", message: "Valid email is required" },
+  { field: "password", required: true, type: "string", message: "Password is required" },
+];
 ```
 
 ---
@@ -756,10 +856,10 @@ auth()                           // Any authenticated user (any role)
 ```ts
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../errors/AppError";
-import { ZodError } from "zod";
+import httpStatus from "http-status";
 
-export const globalErrorHandler = (err, _req, res, _next) => {
-  let statusCode = 500;
+export const globalErrorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  let statusCode = httpStatus.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong";
   let errorDetails: unknown = {};
 
@@ -767,17 +867,15 @@ export const globalErrorHandler = (err, _req, res, _next) => {
     statusCode = err.statusCode;
     message = err.message;
     errorDetails = { stack: err.stack };
-  } else if (err instanceof ZodError) {
-    statusCode = 400;
-    message = "Validation error";
-    errorDetails = err.issues;  // Zod gives detailed issue array
   } else if (err instanceof Error) {
+    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
     message = err.message;
     errorDetails = { stack: err.stack };
   }
 
   res.status(statusCode).json({
     success: false,
+    statusCode,
     message,
     errorDetails,
   });
@@ -787,23 +885,11 @@ export const globalErrorHandler = (err, _req, res, _next) => {
 | Error Type | Status | Example |
 |-----------|--------|---------|
 | `AppError` | Custom status (404, 401, etc.) | `AppError(404, "Not found")` |
-| `ZodError` | 400 | Invalid input from validation |
 | Generic `Error` | 500 | Unexpected errors |
 
-**Response format / রেসপন্স ফরম্যাট:**
-```json
-{
-  "success": false,
-  "message": "Validation error",
-  "errorDetails": [
-    { "code": "invalid_type", "message": "Expected string, received undefined", "path": ["body", "name"] }
-  ]
-}
-```
+**Note**: This handler does NOT have a special case for Zod errors (since Zod is not used). All errors are either `AppError` or generic `Error`.
 
-**English**: Every error in the app passes through this middleware. It checks the error type and formats a consistent error response.
-
-**বাংলা**: অ্যাপের প্রতিটি এরর এই মিডলওয়্যারের মাধ্যমে যায়। এটি এরর টাইপ চেক করে এবং একটি কনসিস্টেন্ট এরর রেসপন্স ফরম্যাট করে।
+**বাংলা**: এই হ্যান্ডলারে Zod এরর এর জন্য আলাদা কেস নেই (যেহেতু Zod ব্যবহার করা হয় না)। সব এরর হয় `AppError` বা জেনেরিক `Error`।
 
 ---
 
@@ -811,73 +897,17 @@ export const globalErrorHandler = (err, _req, res, _next) => {
 
 ```ts
 import { Request, Response } from "express";
+import httpStatus from "http-status";
 
 export const notFound = (_req: Request, res: Response) => {
-  res.status(404).json({
+  res.status(httpStatus.NOT_FOUND).json({
     success: false,
+    statusCode: httpStatus.NOT_FOUND,
     message: "Route not found",
     errorDetails: {},
   });
 };
 ```
-
-**English**: If a request reaches this middleware, it means no route matched. It returns a 404 with a standard format. This is placed AFTER all routes in `app.ts`.
-
-**বাংলা**: যদি একটি রিকোয়েস্ট এই মিডলওয়্যারে পৌঁছায়, তার মানে কোনো রুট ম্যাচ করেনি। এটি স্ট্যান্ডার্ড ফরম্যাটে 404 রিটার্ন করে। এটি `app.ts` এ সব রুটের **পরে** বসানো হয়।
-
----
-
-### `src/middlewares/requestLogger.ts`
-
-```ts
-import { Request, Response, NextFunction } from "express";
-
-export const requestLogger = (req: Request, _res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-};
-```
-
-**English**: Logs every HTTP request with timestamp, method, and URL. For example:
-`[2026-07-06T19:57:11.441Z] GET /api/services`
-
-**বাংলা**: প্রতিটি HTTP রিকোয়েস্ট টাইমস্ট্যাম্প, মেথড এবং URL সহ লগ করে। উদাহরণ:
-`[2026-07-06T19:57:11.441Z] GET /api/services`
-
----
-
-### `src/middlewares/validateRequest.ts`
-
-```ts
-import { Request, Response, NextFunction } from "express";
-
-export const validateRequest = (schema: any) => {
-  return async (req: Request, _res: Response, next: NextFunction) => {
-    try {
-      const parsed = await schema.parseAsync({
-        body: req.body,
-        query: req.query,
-        cookies: req.cookies,
-      });
-      req.body = parsed.body as typeof req.body;
-      next();
-    } catch (err) {
-      next(err);
-    }
-  };
-};
-```
-
-| Line | English | বাংলা |
-|------|---------|-------|
-| `schema: any` | Any Zod schema (we don't need strict typing here) | যেকোন Zod স্কিমা |
-| `schema.parseAsync({ body, query, cookies })` | Validates all inputs against the schema | সব ইনপুট স্কিমা অনুযায়ী ভ্যালিডেট করে |
-| `req.body = parsed.body` | Replaces body with validated (and possibly transformed) data | বডি ভ্যালিডেটেড (এবং সম্ভবত ট্রান্সফর্মড) ডাটা দিয়ে রিপ্লেস করে |
-| `catch (err) { next(err) }` | Passes Zod errors to global error handler | Zod এরর গ্লোবাল এরর হ্যান্ডলারে পাঠায় |
-
-**English**: This middleware wraps any route that needs input validation. The Zod schema defines what the input should look like. If validation fails, Zod throws an error that the global handler formats nicely.
-
-**বাংলা**: এই মিডলওয়্যার যেকোন রুটকে র‍্যাপ করে যাতে ইনপুট ভ্যালিডেশন দরকার। Zod স্কিমা defines করে ইনপুট কেমন হওয়া উচিত। ভ্যালিডেশন ফেল করলে Zod এরর থ্রো করে যা গ্লোবাল হ্যান্ডলার সুন্দরভাবে ফরম্যাট করে।
 
 ---
 
@@ -887,19 +917,34 @@ export const validateRequest = (schema: any) => {
 
 ```ts
 import { Router } from "express";
+import { authRoutes } from "../modules/auth/auth.route";
+import { userRouter } from "../modules/user/user.route";
+import { categoryRoutes } from "../modules/category/category.route";
+import { serviceRoutes } from "../modules/service/service.route";
+import {
+  technicianRoutes,
+  technicianProfileRoutes,
+  technicianAvailabilityRoutes,
+  technicianBookingRoutes,
+} from "../modules/technician/technician.route";
+import { bookingRoutes } from "../modules/booking/booking.route";
+import { paymentRoutes } from "../modules/payment/payment.route";
+import { reviewRoutes } from "../modules/review/review.route";
+import { adminRoutes } from "../modules/admin/admin.route";
 
 const router = Router();
 
 const moduleRoutes = [
   { path: "/auth", route: authRoutes },
+  { path: "/users", route: userRouter },
   { path: "/categories", route: categoryRoutes },
   { path: "/services", route: serviceRoutes },
-  { path: "/bookings", route: bookingRoutes },
-  { path: "/technician/bookings", route: technicianBookingRoutes },
-  { path: "/payments", route: paymentRoutes },
   { path: "/technicians", route: technicianRoutes },
   { path: "/technician/profile", route: technicianProfileRoutes },
   { path: "/technician/availability", route: technicianAvailabilityRoutes },
+  { path: "/technician/bookings", route: technicianBookingRoutes },
+  { path: "/bookings", route: bookingRoutes },
+  { path: "/payments", route: paymentRoutes },
   { path: "/reviews", route: reviewRoutes },
   { path: "/admin", route: adminRoutes },
 ];
@@ -909,383 +954,310 @@ moduleRoutes.forEach((route) => router.use(route.path, route.route));
 export default router;
 ```
 
-**English**: This is the central route registry. All module routes are collected here and mounted under their respective paths. The `forEach` loop does `router.use("/auth", authRoutes)`, `router.use("/categories", categoryRoutes)`, etc.
-
-The final URL paths become:
-- `GET /api/auth/register`
-- `GET /api/categories`
-- `POST /api/bookings`
-- etc.
-
-**বাংলা**: এটি কেন্দ্রীয় রুট রেজিস্ট্রি। সব মডিউল রুট এখানে সংগ্রহ করা হয় এবং তাদের নিজ নিজ পাথের অধীনে মাউন্ট করা হয়। `forEach` লুপটি `router.use("/auth", authRoutes)`, `router.use("/categories", categoryRoutes)` ইত্যাদি করে।
-
 **Complete API table / সম্পূর্ণ API টেবিল:**
 
 | Method | Path | Auth | Module |
 |--------|------|------|--------|
 | POST | /api/auth/register | No | Auth |
 | POST | /api/auth/login | No | Auth |
-| GET | /api/auth/me | Yes | Auth |
+| GET | /api/auth/me | CUSTOMER, TECHNICIAN, ADMIN | Auth |
+| POST | /api/users/register | No | User |
+| GET | /api/users/me | CUSTOMER, TECHNICIAN, ADMIN | User |
+| PUT | /api/users/my-profile | CUSTOMER, TECHNICIAN, ADMIN | User |
 | GET | /api/categories | No | Category |
-| POST | /api/categories | Admin | Category |
+| GET | /api/categories/:id | No | Category |
+| POST | /api/categories | ADMIN | Category |
+| PUT | /api/categories/:id | ADMIN | Category |
+| DELETE | /api/categories/:id | ADMIN | Category |
 | GET | /api/services | No | Service |
-| POST | /api/services | Admin/Tech | Service |
+| GET | /api/services/:id | No | Service |
+| POST | /api/services | TECHNICIAN, ADMIN | Service |
+| PUT | /api/services/:id | TECHNICIAN, ADMIN | Service |
+| DELETE | /api/services/:id | TECHNICIAN, ADMIN | Service |
 | GET | /api/technicians | No | Technician |
-| GET | /api/bookings | Customer/Tech | Booking |
-| POST | /api/bookings | Customer | Booking |
-| PATCH | /api/technician/bookings/:id | Technician | Booking |
-| POST | /api/payments/create | Customer | Payment |
-| GET | /api/payments | Customer | Payment |
-| POST | /api/reviews | Customer | Review |
-| GET | /api/admin/users | Admin | Admin |
-| GET | /api/admin/bookings | Admin | Admin |
+| GET | /api/technicians/:id | No | Technician |
+| PUT | /api/technician/profile | TECHNICIAN | Technician |
+| PUT | /api/technician/availability | TECHNICIAN | Technician |
+| GET | /api/technician/bookings | TECHNICIAN | Technician |
+| PATCH | /api/technician/bookings/:id | TECHNICIAN | Technician |
+| POST | /api/bookings | CUSTOMER | Booking |
+| GET | /api/bookings | CUSTOMER, TECHNICIAN, ADMIN | Booking |
+| GET | /api/bookings/:id | CUSTOMER, TECHNICIAN, ADMIN | Booking |
+| PATCH | /api/bookings/:id/cancel | CUSTOMER | Booking |
+| POST | /api/payments/create | CUSTOMER | Payment |
+| POST | /api/payments/confirm | CUSTOMER | Payment |
+| POST | /api/payments/webhook | No (Stripe) | Payment |
+| GET | /api/payments | CUSTOMER, ADMIN | Payment |
+| GET | /api/payments/:id | CUSTOMER | Payment |
+| POST | /api/reviews | CUSTOMER | Review |
+| GET | /api/admin/users | ADMIN | Admin |
+| PATCH | /api/admin/users/:id | ADMIN | Admin |
+| GET | /api/admin/bookings | ADMIN | Admin |
+| GET | /api/admin/categories | ADMIN | Admin |
+| POST | /api/admin/categories | ADMIN | Admin |
 
 ---
 
 ## 9. Auth Module / অথ মডিউল
 
-### `src/modules/auth/auth.validation.ts`
+### Architecture / আর্কিটেকচার
+
+The Auth module uses:
+- **Validation**: Custom `ValidationRule[]` (not Zod)
+- **Auth middleware**: Checks both cookies and Bearer header for tokens
+- **JWT**: Separate access token (short-lived) and refresh token (long-lived)
+- **Cookies**: Tokens are also set as httpOnly cookies in the login response
+
+### `src/modules/auth/auth.route.ts`
 
 ```ts
-import { z } from "zod";
+const registerRules: ValidationRule[] = [
+  { field: "name", required: true, type: "string", minLength: 1, message: "Name is required" },
+  { field: "email", required: true, type: "email", message: "Valid email is required" },
+  { field: "password", required: true, type: "string", minLength: 6, message: "Password must be at least 6 characters" },
+  { field: "role", enum: ["CUSTOMER", "TECHNICIAN"] },
+];
 
-export const registerSchema = z.object({
-  body: z.object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Invalid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.enum(["CUSTOMER", "TECHNICIAN"]).optional(),
-  }),
-});
+const loginRules: ValidationRule[] = [
+  { field: "email", required: true, type: "email", message: "Valid email is required" },
+  { field: "password", required: true, type: "string", message: "Password is required" },
+];
 
-export const loginSchema = z.object({
-  body: z.object({
-    email: z.string().email("Invalid email"),
-    password: z.string().min(1, "Password is required"),
-  }),
-});
+router.post("/register", validateRequest(registerRules), authController.registerUser);
+router.post("/login", validateRequest(loginRules), authController.loginUser);
+router.get("/me", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), authController.getMe);
 ```
 
-**English**: Zod schemas that define what a valid registration or login request looks like. `z.string().email()` validates email format. `z.enum([...])` restricts role to CUSTOMER or TECHNICIAN. `optional()` makes role not required.
+| Route | Validation | Auth | Controller |
+|-------|-----------|------|------------|
+| POST /register | name, email, password, role (optional) | No | registerUser |
+| POST /login | email, password | No | loginUser |
+| GET /me | None | All roles | getMe |
 
-**বাংলা**: Zod স্কিমা যা defines করে একটি বৈধ রেজিস্ট্রেশন বা লগইন রিকোয়েস্ট কেমন হবে। `z.string().email()` ইমেইল ফরম্যাট ভ্যালিডেট করে। `z.enum([...])` রোলকে CUSTOMER বা TECHNICIAN এ সীমাবদ্ধ করে। `optional()` রোলকে আবশ্যক না করে।
+---
+
+### `src/modules/auth/auth.interface.ts`
+
+```ts
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+  role?: "CUSTOMER" | "TECHNICIAN";
+}
+```
 
 ---
 
 ### `src/modules/auth/auth.service.ts`
 
 ```ts
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import prisma from "../../utils/prismaClient";
+import bcrypt from "bcryptjs";
+import { prisma } from "../../lib/prisma";
+import { LoginPayload, RegisterPayload } from "./auth.interface";
+import config from "../../config";
+import { jwtUtils } from "../../utils/jwt";
 import { AppError } from "../../errors/AppError";
-```
+import httpStatus from "http-status";
 
-**English**: The service layer contains the business logic. Let's look at each function:
+const loginUser = async (payload: LoginPayload) => {
+  const { email, password } = payload;
 
-**বাংলা**: সার্ভিস লেয়ারে বিজনেস লজিক থাকে। চলুন প্রতিটি ফাংশন দেখি:
-
----
-
-#### `registerUser`
-
-```ts
-export const registerUser = async (data) => {
-  // 1. Check if email already exists
-  const existing = await prisma.user.findUnique({ where: { email: data.email } });
-  if (existing) throw new AppError(409, "Email already exists");
-
-  // 2. Hash password (10 salt rounds)
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  // 3. Create user in database
-  const user = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-      role: (data.role as any) || "CUSTOMER",
-    },
-  });
-
-  // 4. If technician, auto-create their profile
-  if (user.role === "TECHNICIAN") {
-    await prisma.technicianProfile.create({ data: { userId: user.id } });
-  }
-
-  // 5. Generate JWT token (expires in 7 days)
-  const token = jwt.sign(
-    { userId: user.id, role: user.role },
-    process.env.JWT_SECRET!,
-    { expiresIn: "7d" }
-  );
-
-  return { token, user: { id, name, email, role } };
-};
-```
-
-| Step | English | বাংলা |
-|------|---------|-------|
-| 1 | Check if email is already taken | ইমেইল আগে নেওয়া হয়েছে কিনা চেক |
-| 2 | Hash password with bcrypt (salt rounds = 10) | bcrypt দিয়ে পাসওয়ার্ড হ্যাশ (সল্ট রাউন্ড = 10) |
-| 3 | Save user to database | ইউজার ডাটাবেসে সেভ |
-| 4 | Auto-create TechnicianProfile if role is TECHNICIAN | রোল TECHNICIAN হলে অটো-প্রোফাইল তৈরি |
-| 5 | Create JWT with userId and role, expires in 7 days | userId এবং role সহ JWT তৈরি, 7 দিনে মেয়াদ শেষ |
-
-**Why hash password? / কেন পাসওয়ার্ড হ্যাশ করি?**
-Never store plain-text passwords! `bcrypt.hash` converts "password123" into a scrambled string like `$2b$10$...`. Even if hackers steal the database, they can't know the original password.
-
-কখনো প্লেইন-টেক্সট পাসওয়ার্ড সংরক্ষণ করবেন না! `bcrypt.hash` "password123" কে স্ক্র্যাম্বলড স্ট্রিং যেমন `$2b$10$...` এ রূপান্তর করে। হ্যাকাররা ডাটাবেস চুরি করলেও আসল পাসওয়ার্ড জানতে পারবে না।
-
----
-
-#### `loginUser`
-
-```ts
-export const loginUser = async (data) => {
   // 1. Find user by email
-  const user = await prisma.user.findUnique({ where: { email: data.email } });
-  if (!user) throw new AppError(401, "Invalid credentials");
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials");
 
   // 2. Check if banned
-  if (user.isBanned) throw new AppError(403, "Your account has been banned");
+  if (user.isBanned) throw new AppError(httpStatus.FORBIDDEN, "Your account has been banned");
 
-  // 3. Compare password with hash
-  const isMatch = await bcrypt.compare(data.password, user.password);
-  if (!isMatch) throw new AppError(401, "Invalid credentials");
+  // 3. Compare password
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  if (!isPasswordMatch) throw new AppError(httpStatus.UNAUTHORIZED, "Invalid credentials");
 
-  // 4. Generate JWT
-  const token = jwt.sign(
-    { userId: user.id, role: user.role },
-    process.env.JWT_SECRET!,
-    { expiresIn: "7d" }
-  );
+  // 4. Generate JWT payload
+  const jwtPayload = { id: user.id, name: user.name, email: user.email, role: user.role };
 
-  return { token, user: { id, name, email, role } };
+  // 5. Create access token (short-lived) + refresh token (long-lived)
+  const accessToken = jwtUtils.createToken(jwtPayload, config.jwt_access_secret!, config.jwt_access_expiration || "1d");
+  const refreshToken = jwtUtils.createToken(jwtPayload, config.jwt_refresh_secret!, config.jwt_refresh_expiration || "30d");
+
+  return { accessToken, refreshToken };
 };
 ```
 
-| Step | English | বাংলা |
-|------|---------|-------|
-| 1 | Find user by email | ইমেইল দিয়ে ইউজার খুঁজে |
-| 2 | Check if account is banned | অ্যাকাউন্ট ব্যান করা আছে কিনা চেক |
-| 3 | Compare password with stored hash | পাসওয়ার্ড সংরক্ষিত হ্যাশের সাথে তুলনা |
-| 4 | Return JWT token | JWT টোকেন রিটার্ন |
+**Key features / মূল বৈশিষ্ট্য:**
 
-**Why same message for "user not found" and "wrong password"?**
-It's a security practice. If we say "Email not found", hackers can find which emails are registered. Always say "Invalid credentials".
+| Feature | English | বাংলা |
+|---------|---------|-------|
+| Dual tokens | Returns both accessToken (1d) and refreshToken (30d) | accessToken (1d) এবং refreshToken (30d) উভয়ই রিটার্ন করে |
+| JWT payload | Contains `{ id, name, email, role }` — not just `{ userId, role }` | শুধু `{ userId, role }` না — `{ id, name, email, role }` থাকে |
+| bcryptjs | Uses `bcryptjs` library (pure JS) | `bcryptjs` লাইব্রেরি ব্যবহার (পিওর JS) |
+| Config-driven salt | Salt rounds from `config.bcrypt_salt_rounds` | `config.bcrypt_salt_rounds` থেকে সল্ট রাউন্ড |
 
-**কেন "user not found" এবং "wrong password" এর জন্য একই মেসেজ?**
-এটি একটি নিরাপত্তা অভ্যাস। যদি আমরা বলি "Email not found", হ্যাকাররা জানতে পারে কোন ইমেইল রেজিস্টার্ড। সবসময় "Invalid credentials" বলুন।
-
----
-
-#### `getMe`
+**Register flow / রেজিস্টার ফ্লো:**
 
 ```ts
-export const getMe = async (userId: string) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { technicianProfile: true },
+const registerUser = async (payload: RegisterPayload) => {
+  // 1. Check existing email
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) throw new AppError(httpStatus.CONFLICT, "Email already exists");
+
+  // 2. Hash password
+  const hashedPassword = await bcrypt.hash(password, Number(config.bcrypt_salt_rounds));
+
+  // 3. Create user (omit password from return)
+  const user = await prisma.user.create({
+    data: { name, email, password: hashedPassword, role: role || "CUSTOMER" },
+    omit: { password: true },
   });
-  if (!user) throw new AppError(404, "User not found");
+
   return user;
 };
 ```
 
-**English**: Fetches the authenticated user's full profile. `include: { technicianProfile: true }` loads the related technician profile if it exists.
+**English**: Unlike the common pattern, `registerUser` does NOT auto-create a `TechnicianProfile` for TECHNICIAN role users. It also does NOT return a JWT after registration — it only returns the user object.
 
-**বাংলা**: অথেনটিকেটেড ইউজারের সম্পূর্ণ প্রোফাইল আনে। `include: { technicianProfile: true }` সম্পর্কিত টেকনিশিয়ান প্রোফাইল থাকলে তা লোড করে।
+**বাংলা**: সাধারণ প্যাটার্নের থেকে ভিন্ন, `registerUser` TECHNICIAN রোলের ইউজারদের জন্য অটো-`TechnicianProfile` তৈরি করে না। এটি রেজিস্ট্রেশনের পর JWT রিটার্ন করে না — শুধুমাত্র ইউজার অবজেক্ট রিটার্ন করে।
+
+**`getMe`:**
+
+```ts
+const getMe = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    omit: { password: true },
+  });
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  return user;
+};
+```
+
+**English**: Uses `omit: { password: true }` instead of `select` to exclude password. This is simpler — you get all fields EXCEPT password.
+
+**বাংলা**: পাসওয়ার্ড বাদ দেওয়ার জন্য `select` এর পরিবর্তে `omit: { password: true }` ব্যবহার করে। এটি সহজ — পাসওয়ার্ড ছাড়া সব ফিল্ড পায়।
 
 ---
 
 ### `src/modules/auth/auth.controller.ts`
 
 ```ts
-import { Request, Response } from "express";
-import { catchAsync } from "../../utils/catchAsync";
-import { sendResponse } from "../../utils/sendResponse";
-import * as authService from "./auth.service";
+const loginUser = catchAsync(async (req: Request, res: Response) => {
+  const { accessToken, refreshToken } = await authService.loginUser(req.body);
 
-export const register = catchAsync(async (req: Request, res: Response) => {
-  const result = await authService.registerUser(req.body);
-  sendResponse(res, 201, "User registered successfully", result);
-});
+  res.cookie("accessToken", accessToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 24 * 60 * 60 * 1000 });
+  res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: false, sameSite: "none", maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-export const login = catchAsync(async (req: Request, res: Response) => {
-  const result = await authService.loginUser(req.body);
-  sendResponse(res, 200, "Login successful", result);
-});
-
-export const me = catchAsync(async (req: Request, res: Response) => {
-  const user = await authService.getMe(req.user!.userId);
-  sendResponse(res, 200, "User fetched successfully", user);
+  sendResponse(res, { success: true, statusCode: httpStatus.OK, message: "User logged in successfully", data: { accessToken, refreshToken } });
 });
 ```
 
-**English**: Controllers are thin layers — they receive the HTTP request, call the service function, and send the response. No business logic here. `catchAsync` wraps every function for error handling. `req.user!.userId` uses `!` because the auth middleware guarantees `req.user` exists.
+**English**: The login controller sets both tokens as **httpOnly cookies** AND returns them in the response body. `httpOnly: true` prevents JavaScript from accessing the cookie (XSS protection). `secure: false` allows HTTP for development.
 
-**বাংলা**: কন্ট্রোলাররা পাতলা লেয়ার — তারা HTTP রিকোয়েস্ট পায়, সার্ভিস ফাংশন কল করে এবং রেসপন্স পাঠায়। এখানে কোন বিজনেস লজিক নেই। `catchAsync` প্রতিটি ফাংশনকে এরর হ্যান্ডলিং এর জন্য র‍্যাপ করে। `req.user!.userId` এ `!` ব্যবহার করা হয়েছে কারণ auth মিডলওয়্যার গ্যারান্টি দেয় `req.user` আছে।
+**বাংলা**: লগইন কন্ট্রোলার উভয় টোকেন **httpOnly কুকি** হিসেবে সেট করে এবং রেসপন্স বডিতেও রিটার্ন করে। `httpOnly: true` JavaScript কে কুকিতে অ্যাক্সেস করতে বাধা দেয় (XSS প্রোটেকশন)। `secure: false` ডেভেলপমেন্টের জন্য HTTP অনুমতি দেয়।
 
 ---
 
-### `src/modules/auth/auth.routes.ts`
+## 10. User Module / ইউজার মডিউল
+
+### `src/modules/user/user.route.ts`
 
 ```ts
-import { Router } from "express";
-import { validateRequest } from "../../middlewares/validateRequest";
-import { auth } from "../../middlewares/auth";
-import { registerSchema, loginSchema } from "./auth.validation";
-import * as authController from "./auth.controller";
-
-const router = Router();
-
-router.post("/register", validateRequest(registerSchema), authController.register);
-router.post("/login", validateRequest(loginSchema), authController.login);
-router.get("/me", auth("CUSTOMER", "TECHNICIAN", "ADMIN"), authController.me);
-
-export const authRoutes = router;
+router.post("/register", userController.registerUser);
+router.get("/me", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), userController.getMyProfile);
+router.put("/my-profile", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), userController.updateMyProfile);
 ```
 
-| Route | Middleware | Controller |
-|-------|------------|------------|
-| `POST /register` | `validateRequest(registerSchema)` | `authController.register` |
-| `POST /login` | `validateRequest(loginSchema)` | `authController.login` |
-| `GET /me` | `auth("CUSTOMER", "TECHNICIAN", "ADMIN")` | `authController.me` |
+**English**: The User module provides additional user management routes that complement the Auth module. `/users/register` is an alternative registration endpoint. `/users/me` and `/users/my-profile` let any authenticated user view and update their profile.
 
-**English**: Routes connect HTTP methods + paths to middleware chains + controllers. The `@openapi` comments (shown above each route in the full file) generate Swagger documentation automatically.
+**বাংলা**: ইউজার মডিউল অতিরিক্ত ইউজার ম্যানেজমেন্ট রুট সরবরাহ করে যা Auth মডিউলকে পরিপূরক করে। `/users/register` একটি বিকল্প রেজিস্ট্রেশন এন্ডপয়েন্ট। `/users/me` এবং `/users/my-profile` যেকোন অথেনটিকেটেড ইউজারকে তাদের প্রোফাইল দেখতে এবং আপডেট করতে দেয়।
 
-**বাংলা**: রুটগুলি HTTP মেথড + পাথকে মিডলওয়্যার চেইন + কন্ট্রোলারের সাথে সংযুক্ত করে। `@openapi` কমেন্টগুলি (পূর্ণ ফাইলে প্রতিটি রুটের উপরে দেখানো) অটোমেটিক্যালি Swagger ডকুমেন্টেশন জেনারেট করে।
+### `src/modules/user/user.service.ts`
+
+```ts
+const updateMyProfileInDB = async (userId: string, payload: any) => {
+  const { name, email } = payload;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { name, email },
+    omit: { password: true },
+  });
+
+  return updatedUser;
+};
+```
+
+**English**: Only `name` and `email` can be updated. Password changes would need a separate endpoint with current password verification.
+
+**বাংলা**: শুধুমাত্র `name` এবং `email` আপডেট করা যেতে পারে। পাসওয়ার্ড পরিবর্তনের জন্য বর্তমান পাসওয়ার্ড যাচাই সহ আলাদা এন্ডপয়েন্ট প্রয়োজন হবে।
 
 ---
 
-## 10. Category Module / ক্যাটাগরি মডিউল
+## 11. Category Module / ক্যাটাগরি মডিউল
+
+### `src/modules/category/category.route.ts`
+
+```ts
+router.get("/", categoryController.getAll);              // Public
+router.get("/:id", categoryController.getById);           // Public
+router.post("/", auth(Role.ADMIN), validateRequest(...), categoryController.create);   // Admin
+router.put("/:id", auth(Role.ADMIN), categoryController.update);        // Admin
+router.delete("/:id", auth(Role.ADMIN), categoryController.remove);     // Admin
+```
+
+**English**: Full CRUD. Read operations are public, write operations require ADMIN role. Category names must be unique.
+
+**বাংলা**: সম্পূর্ণ CRUD। রিড অপারেশন পাবলিক, রাইট অপারেশনের জন্য ADMIN রোল প্রয়োজন। ক্যাটাগরির নাম ইউনিক হতে হবে。
 
 ### `src/modules/category/category.validation.ts`
 
 ```ts
-export const createCategorySchema = z.object({
-  body: z.object({
-    name: z.string().min(1, "Name is required"),
-    description: z.string().optional(),
-  }),
-});
-
-export const updateCategorySchema = z.object({
-  body: z.object({
-    name: z.string().optional(),
-    description: z.string().optional(),
-  }),
-});
+export const createCategoryRules: ValidationRule[] = [
+  { field: "name", required: true, type: "string", minLength: 1, message: "Category name is required" },
+  { field: "description", type: "string" },
+];
 ```
-
-**English**: Create requires a name (required). Update makes both fields optional since you can update just the name OR just the description.
-
-**বাংলা**: ক্রিয়েটের জন্য নাম আবশ্যক। আপডেটে উভয় ফিল্ড অপশনাল কারণ আপনি শুধু নাম বা শুধু বিবরণ আপডেট করতে পারেন।
-
----
 
 ### `src/modules/category/category.service.ts`
 
 ```ts
-import prisma from "../../utils/prismaClient";
-import { AppError } from "../../errors/AppError";
-
-export const getAllCategories = async () => {
-  return prisma.category.findMany({ include: { services: true } });
-};
-```
-
-**English**: `findMany` gets all categories. `include: { services: true }` loads related services for each category.
-
-**বাংলা**: `findMany` সব ক্যাটাগরি আনে। `include: { services: true }` প্রতিটি ক্যাটাগরির জন্য সম্পর্কিত সার্ভিস লোড করে।
-
-```ts
-export const getCategoryById = async (id: string) => {
-  const category = await prisma.category.findUnique({
-    where: { id },
+const getAllCategories = async () => {
+  return prisma.category.findMany({
     include: { services: true },
+    orderBy: { name: "asc" },
   });
-  if (!category) throw new AppError(404, "Category not found");
-  return category;
 };
 ```
 
-**English**: `findUnique` finds by ID. Throws 404 if not found. Every single "get by ID" function follows this exact pattern.
-
-**বাংলা**: `findUnique` আইডি দিয়ে খুঁজে। না পেলে 404 থ্রো করে। প্রতিটি "get by ID" ফাংশন এই একই প্যাটার্ন অনুসরণ করে।
-
-```ts
-export const createCategory = async (data) => {
-  const existing = await prisma.category.findUnique({ where: { name: data.name } });
-  if (existing) throw new AppError(409, "Category already exists");
-  return prisma.category.create({ data });
-};
-```
-
-**English**: Before creating, check if a category with the same name exists (409 Conflict). `name` has `@unique` in the schema too as a safety net.
-
-**বাংলা**: তৈরি করার আগে, একই নামের ক্যাটাগরি আছে কিনা চেক (409 Conflict)। নিরাপত্তার জন্য স্কিমায় `name` এর `@unique`ও আছে।
-
-```ts
-export const updateCategory = async (id, data) => {
-  await getCategoryById(id);  // Reuse! Checks existence
-  return prisma.category.update({ where: { id }, data });
-};
-
-export const deleteCategory = async (id) => {
-  await getCategoryById(id);  // Reuse! Checks existence
-  return prisma.category.delete({ where: { id } });
-};
-```
-
-**English**: The `getCategoryById` function is reused here — it both validates existence AND returns the data. This is DRY (Don't Repeat Yourself) principle.
-
-**বাংলা**: `getCategoryById` ফাংশন এখানে পুনরায় ব্যবহার করা হয়েছে — এটি অস্তিত্ব যাচাইও করে এবং ডাটাও রিটার্ন করে। এটি DRY (Don't Repeat Yourself) নীতি।
+**Note**: Categories are ordered alphabetically (`orderBy: { name: "asc" }`).
 
 ---
 
-### `src/modules/category/category.controller.ts`
+## 12. Service Module / সার্ভিস মডিউল
+
+### `src/modules/service/service.route.ts`
 
 ```ts
-export const getAll = catchAsync(async (_req, res) => {
-  const categories = await categoryService.getAllCategories();
-  sendResponse(res, 200, "Categories fetched successfully", categories);
-});
-
-export const getById = catchAsync(async (req, res) => {
-  const category = await categoryService.getCategoryById(req.params.id);
-  sendResponse(res, 200, "Category fetched successfully", category);
-});
-
-export const create = catchAsync(async (req, res) => {
-  const category = await categoryService.createCategory(req.body);
-  sendResponse(res, 201, "Category created successfully", category);
-});
-
-export const update = catchAsync(async (req, res) => {
-  const category = await categoryService.updateCategory(req.params.id, req.body);
-  sendResponse(res, 200, "Category updated successfully", category);
-});
-
-export const remove = catchAsync(async (req, res) => {
-  await categoryService.deleteCategory(req.params.id);
-  sendResponse(res, 200, "Category deleted successfully", null);  // data is null
-});
+router.get("/", serviceController.getAll);                              // Public
+router.get("/:id", serviceController.getById);                          // Public
+router.post("/", auth(Role.TECHNICIAN, Role.ADMIN), validateRequest(...), serviceController.create);
+router.put("/:id", auth(Role.TECHNICIAN, Role.ADMIN), serviceController.update);
+router.delete("/:id", auth(Role.TECHNICIAN, Role.ADMIN), serviceController.remove);
 ```
 
-**English**: Standard CRUD controller. Notice `remove` sends `null` as data since there's nothing to return after deletion. `_req` (with underscore) means "I know I'm not using this parameter."
+**English**: Both TECHNICIAN and ADMIN can create/update/delete services. When a technician creates a service, `technicianId` comes from the JWT token (`req.user!.id`), not the request body.
 
-**বাংলা**: স্ট্যান্ডার্ড CRUD কন্ট্রোলার। লক্ষ্য করুন `remove` ডাটা হিসেবে `null` পাঠায় কারণ ডিলিট করার পর ফেরত দেওয়ার কিছু নেই। `_req` (আন্ডারস্কোর সহ) মানে "আমি জানি আমি এই প্যারামিটার ব্যবহার করছি না।"
+**বাংলা**: TECHNICIAN এবং ADMIN উভয়ই সার্ভিস তৈরি/আপডেট/ডিলিট করতে পারে। যখন একজন টেকনিশিয়ান সার্ভিস তৈরি করেন, `technicianId` JWT টোকেন থেকে আসে (`req.user!.id`), রিকোয়েস্ট বডি থেকে নয়।
 
----
-
-## 11. Service Module / সার্ভিস মডিউল
-
-### `src/modules/service/service.service.ts`
+### Service Filtering / সার্ভিস ফিল্টারিং
 
 ```ts
-export const getAllServices = async (filters) => {
+const getAllServices = async (filters) => {
   const where: any = {};
 
   if (filters.categoryId) where.categoryId = filters.categoryId;
@@ -1303,509 +1275,285 @@ export const getAllServices = async (filters) => {
     ];
   }
 
-  return prisma.service.findMany({
-    where,
-    include: { category: true, technician: true },
-  });
+  return prisma.service.findMany({ where, include: { category: true, technician: { omit: { password: true } } }, orderBy: { id: "desc" } });
 };
 ```
 
-**English**: Dynamic filtering — builds a `where` object based on which filters are provided. `gte` = greater than or equal, `lte` = less than or equal. `mode: "insensitive"` makes search case-insensitive. `OR` matches either title OR description.
+Example: `GET /api/services?categoryId=abc&minPrice=50&search=paint`
 
-Example query: `GET /api/services?categoryId=abc&minPrice=50&search=paint`
+**Ownership check for update/delete / আপডেট/ডিলিটের জন্য মালিকানা চেক:**
 
-**বাংলা**: ডায়নামিক ফিল্টারিং — কোন ফিল্টার দেওয়া হয়েছে তার উপর ভিত্তি করে `where` অবজেক্ট তৈরি করে। `gte` = বড় বা সমান, `lte` = ছোট বা সমান। `mode: "insensitive"` সার্চকে কেস-ইনসেনসিটিভ করে। `OR` টাইটেল বা বিবরণ যেকোনোটিতে ম্যাচ করে।
+```ts
+const updateService = async (id, technicianId, data) => {
+  const service = await prisma.service.findUnique({ where: { id } });
+  if (!service) throw new AppError(httpStatus.NOT_FOUND, "Service not found");
+  if (service.technicianId !== technicianId) {
+    throw new AppError(httpStatus.FORBIDDEN, "You can only update your own services");
+  }
+  // ... update
+};
+```
 
 ---
 
-### `src/modules/service/service.controller.ts`
+## 13. Technician Module / টেকনিশিয়ান মডিউল
 
-```ts
-export const getAll = catchAsync(async (req, res) => {
-  const { categoryId, minPrice, maxPrice, search } = req.query;
-  const services = await serviceService.getAllServices({
-    categoryId: categoryId as string | undefined,
-    minPrice: minPrice ? Number(minPrice) : undefined,
-    maxPrice: maxPrice ? Number(maxPrice) : undefined,
-    search: search as string | undefined,
-  });
-  sendResponse(res, 200, "Services fetched successfully", services);
-});
-```
+### Four Routers / চারটি রাউটার
 
-**English**: Query parameters come as strings from the URL. `Number(minPrice)` converts "50" to 50. `as string | undefined` is TypeScript type casting since `req.query` values are `string | string[] | undefined`.
+The technician module exports **4 separate routers** that are mounted at different paths:
 
-**বাংলা**: কুয়েরি প্যারামিটারগুলি URL থেকে স্ট্রিং হিসেবে আসে। `Number(minPrice)` "50" কে 50 এ রূপান্তর করে। `as string | undefined` টাইপস্ক্রিপ্ট টাইপ কাস্টিং কারণ `req.query` ভ্যালুগুলি `string | string[] | undefined` হয়।
-
-```ts
-export const create = catchAsync(async (req, res) => {
-  const service = await serviceService.createService({
-    ...req.body,                          // Spread: title, description, price, categoryId
-    technicianId: req.user!.userId,       // Add technician ID from JWT
-  });
-  sendResponse(res, 201, "Service created successfully", service);
-});
-```
-
-**English**: When creating a service, the `technicianId` comes from the authenticated user's JWT token, not from the request body. This prevents a user from creating a service under someone else's name.
-
-**বাংলা**: সার্ভিস তৈরি করার সময়, `technicianId` JWT টোকেন থেকে আসে, রিকোয়েস্ট বডি থেকে নয়। এটি প্রতিরোধ করে যে একজন ইউজার অন্য কারো নামে সার্ভিস তৈরি করতে পারবে না।
-
----
-
-## 12. Technician Module / টেকনিশিয়ান মডিউল
+| Router | Mount Path | Purpose |
+|--------|-----------|---------|
+| `technicianRoutes` | `/technicians` | Public: list all technicians, get by ID |
+| `technicianProfileRoutes` | `/technician/profile` | Auth: update profile |
+| `technicianAvailabilityRoutes` | `/technician/availability` | Auth: update availability |
+| `technicianBookingRoutes` | `/technician/bookings` | Auth: view/manage bookings |
 
 ### `src/modules/technician/technician.service.ts`
 
+**`getAllTechnicians` — Only shows non-banned technicians:**
+
 ```ts
-export const updateProfile = async (userId, data) => {
-  // 1. Verify user exists and is a TECHNICIAN
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { technicianProfile: true },
+const getAllTechnicians = async () => {
+  return prisma.user.findMany({
+    where: { role: "TECHNICIAN", isBanned: false },
+    omit: { password: true },
+    include: { technicianProfile: true, services: true },
   });
-  if (!user || user.role !== "TECHNICIAN") {
-    throw new AppError(403, "Only technicians can update their profile");
-  }
-
-  // 2. Upsert: Create if doesn't exist, Update if exists
-  const profile = await prisma.technicianProfile.upsert({
-    where: { userId },
-    update: data,
-    create: { userId, ...data },
-    include: { user: true },
-  });
-
-  return profile;
 };
 ```
 
-**English**: `upsert` = **UP**date + in**SERT**. If a profile exists, update it. If not, create one. This is useful because the profile is auto-created empty during registration, but we use upsert as a safety measure.
-
-**বাংলা**: `upsert` = আপডেট + ইনসার্ট। যদি প্রোফাইল থাকে, আপডেট করে। না থাকলে, নতুন তৈরি করে। এটি উপকারী কারণ রেজিস্ট্রেশনের সময় প্রোফাইল খালি তৈরি হয়, কিন্তু আমরা নিরাপত্তার জন্য upsert ব্যবহার করি।
+**`getTechnicianById` — Includes reviews:**
 
 ```ts
-export const updateAvailability = async (userId, availability) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || user.role !== "TECHNICIAN") {
-    throw new AppError(403, "Only technicians can set availability");
-  }
-
-  const profile = await prisma.technicianProfile.upsert({
-    where: { userId },
-    update: { availability },
-    create: { userId, availability },
+const getTechnicianById = async (id: string) => {
+  const technician = await prisma.user.findFirst({
+    where: { id, role: "TECHNICIAN" },
+    omit: { password: true },
+    include: {
+      technicianProfile: true,
+      services: { include: { category: true } },
+      reviewsAsTechnician: { include: { customer: { omit: { password: true } } } },
+    },
   });
-
-  return profile;
+  // ...
 };
 ```
 
-**English**: Availability is stored as JSON in the `availability` field. The JSON structure is flexible — it could be anything the frontend sends. This gives developers freedom.
-
-**বাংলা**: অ্যাভেইলেবিলিটি `availability` ফিল্ডে JSON আকারে সংরক্ষিত হয়। JSON গঠন নমনীয় — এটি ফ্রন্টএন্ড যা পাঠায় তা হতে পারে। এটি ডেভেলপারদের স্বাধীনতা দেয়।
-
-Example availability JSON / উদাহরণ:
-```json
-{
-  "availability": [
-    { "day": "Monday", "slots": ["09:00-12:00", "14:00-17:00"] },
-    { "day": "Wednesday", "slots": ["10:00-16:00"] }
-  ]
-}
-```
-
----
-
-### `src/modules/technician/technician.routes.ts`
+**`updateBookingStatus` — Valid status transitions:**
 
 ```ts
-const router = Router();
-const profileRouter = Router();
-const availabilityRouter = Router();
-
-router.get("/", technicianController.getAll);                    // GET /api/technicians
-router.get("/:id", technicianController.getById);                // GET /api/technicians/:id
-profileRouter.put("/", auth("TECHNICIAN"), ...);                 // PUT /api/technician/profile
-availabilityRouter.put("/", auth("TECHNICIAN"), ...);            // PUT /api/technician/availability
-
-export const technicianRoutes = router;
-export const technicianProfileRoutes = profileRouter;
-export const technicianAvailabilityRoutes = availabilityRouter;
+const validTransitions: Record<string, string[]> = {
+  REQUESTED: ["ACCEPTED", "DECLINED", "CANCELLED"],
+  ACCEPTED: ["PAID", "CANCELLED"],
+  PAID: ["IN_PROGRESS", "CANCELLED"],
+  IN_PROGRESS: ["COMPLETED"],
+  COMPLETED: [],
+  DECLINED: [],
+  CANCELLED: [],
+};
 ```
 
-**English**: Notice the use of separate routers for different path prefixes. In the route index:
-- `/technicians` uses `technicianRoutes` → `GET /technicians`, `GET /technicians/:id`
-- `/technician/profile` uses `technicianProfileRoutes` → `PUT /technician/profile`
-- `/technician/availability` uses `technicianAvailabilityRoutes` → `PUT /technician/availability`
+**English**: The `validTransitions` object explicitly defines which status → status transitions are allowed. Any transition not in the list is rejected. `CANCELLED` can be reached from REQUESTED, ACCEPTED, or PAID.
 
-**বাংলা**: লক্ষ্য করুন বিভিন্ন পাথ প্রিফিক্সের জন্য আলাদা রাউটার ব্যবহার করা হয়েছে। রুট ইনডেক্সে:
-- `/technicians` → `GET /technicians`, `GET /technicians/:id`
-- `/technician/profile` → `PUT /technician/profile`
-- `/technician/availability` → `PUT /technician/availability`
+**বাংলা**: `validTransitions` অবজেক্ট স্পষ্টভাবে সংজ্ঞায়িত করে কোন স্ট্যাটাস → স্ট্যাটাস ট্রানজিশন অনুমোদিত। তালিকায় না থাকা যেকোনো ট্রানজিশন প্রত্যাখ্যান করা হয়। `CANCELLED` এ REQUESTED, ACCEPTED, বা PAID থেকে যাওয়া যায়।
 
 ---
 
-## 13. Booking Module / বুকিং মডিউল
+## 14. Booking Module / বুকিং মডিউল
+
+### `src/modules/booking/booking.route.ts`
+
+```ts
+router.post("/", auth(Role.CUSTOMER), validateRequest(createBookingRules), bookingController.create);
+router.get("/", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), bookingController.getAll);
+router.get("/:id", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), bookingController.getById);
+router.patch("/:id/cancel", auth(Role.CUSTOMER), bookingController.cancel);
+```
+
+**Unique feature: Cancel endpoint / বিশেষ বৈশিষ্ট্য: ক্যান্সেল এন্ডপয়েন্ট**
+
+`PATCH /api/bookings/:id/cancel` — Only CUSTOMER can cancel their own booking, and only if status is REQUESTED, ACCEPTED, or PAID.
 
 ### `src/modules/booking/booking.service.ts`
 
-#### `createBooking`
+**`getMyBookings` — Role-based filtering:**
 
 ```ts
-export const createBooking = async (data) => {
-  // 1. Get the service to find its technician
-  const service = await prisma.service.findUnique({ where: { id: data.serviceId } });
-  if (!service) throw new AppError(404, "Service not found");
-
-  // 2. Create booking with technician from the service
-  const booking = await prisma.booking.create({
-    data: {
-      customerId: data.customerId,
-      serviceId: data.serviceId,
-      technicianId: service.technicianId,  // Automatically assign the technician
-      scheduleDate: data.scheduleDate ? new Date(data.scheduleDate) : null,
-    },
-    include: { service: true, customer: true, technician: true },
-  });
-
-  return booking;
-};
-```
-
-**English**: When a customer books, the `technicianId` comes from the service itself — not from the customer's request. This prevents customers from choosing any technician. The scheduleDate is converted from string to Date object.
-
-**বাংলা**: যখন একজন গ্রাহক বুক করেন, `technicianId` সার্ভিস থেকেই আসে — গ্রাহকের রিকোয়েস্ট থেকে নয়। এটি গ্রাহকদের যেকোনো টেকনিশিয়ান বেছে নিতে বাধা দেয়। scheduleDate স্ট্রিং থেকে Date অবজেক্টে রূপান্তরিত হয়।
-
----
-
-#### `getMyBookings`
-
-```ts
-export const getMyBookings = async (userId, role) => {
+const getMyBookings = async (userId: string, role: string) => {
   const where =
-    role === "CUSTOMER"
-      ? { customerId: userId }
-      : role === "TECHNICIAN"
-        ? { technicianId: userId }
-        : {};  // Admin sees all
+    role === "CUSTOMER" ? { customerId: userId }
+    : role === "TECHNICIAN" ? { technicianId: userId }
+    : {};  // Admin sees all
 
   return prisma.booking.findMany({
     where,
-    include: { service: true, customer: true, technician: true, payment: true, review: true },
+    include: { service: true, customer: { omit: { password: true } }, technician: { omit: { password: true } }, payment: true, review: true },
     orderBy: { id: "desc" },
   });
 };
 ```
 
-**English**: Role-based filtering. Customers see bookings where they're the customer. Technicians see bookings where they're the technician. Admins see all (empty `where`). `orderBy: { id: "desc" }` shows newest first.
-
-**বাংলা**: রোল-ভিত্তিক ফিল্টারিং। গ্রাহকরা দেখে যেখানে তারা গ্রাহক। টেকনিশিয়ানরা দেখে যেখানে তারা টেকনিশিয়ান। অ্যাডমিনরা সব দেখে (খালি `where`)। `orderBy: { id: "desc" }` নতুনগুলি আগে দেখায়।
-
 ---
 
-#### `getBookingById`
+## 15. Payment Module / পেমেন্ট মডিউল
+
+### `src/modules/payment/payment.route.ts`
 
 ```ts
-export const getBookingById = async (bookingId, userId, role) => {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { service: true, customer: true, technician: true, payment: true, review: true },
-  });
-  if (!booking) throw new AppError(404, "Booking not found");
-
-  // Role-based access control
-  if (role === "CUSTOMER" && booking.customerId !== userId) {
-    throw new AppError(403, "You can only view your own bookings");
-  }
-  if (role === "TECHNICIAN" && booking.technicianId !== userId) {
-    throw new AppError(403, "You can only view your own bookings");
-  }
-
-  return booking;
-};
+router.post("/create", auth(Role.CUSTOMER), paymentController.create);
+router.post("/confirm", auth(Role.CUSTOMER), paymentController.confirm);
+router.get("/", auth(Role.CUSTOMER, Role.ADMIN), paymentController.getAll);
+router.get("/:id", auth(Role.CUSTOMER), paymentController.getById);
+// Webhook is mounted in app.ts (raw body needed)
 ```
 
-**English**: This shows authorization at the data level — even with a valid JWT, you can only view your own bookings. Admins can view any booking (no check for ADMIN role).
-
-**বাংলা**: এটি ডাটা লেভেলে অথরাইজেশন দেখায় — বৈধ JWT থাকলেও, আপনি শুধু আপনার নিজের বুকিং দেখতে পারেন। অ্যাডমিনরা যেকোনো বুকিং দেখতে পারে (ADMIN রোলের জন্য কোনো চেক নেই)।
-
----
-
-#### `updateBookingStatus`
-
-```ts
-export const updateBookingStatus = async (bookingId, technicianId, status) => {
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
-  if (!booking) throw new AppError(404, "Booking not found");
-  if (booking.technicianId !== technicianId) {
-    throw new AppError(403, "This booking does not belong to you");
-  }
-
-  // Status transition validation
-  if (status === "COMPLETED" && booking.status !== "IN_PROGRESS") {
-    throw new AppError(400, "Booking must be in-progress before it can be completed");
-  }
-  if (status === "IN_PROGRESS" && booking.status !== "PAID") {
-    throw new AppError(400, "Booking must be paid before it can be in-progress");
-  }
-
-  const updated = await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status },
-    include: { service: true, customer: true },
-  });
-
-  return updated;
-};
-```
-
-**English**: Status flow enforcement. You can't jump from ACCEPTED directly to COMPLETED — you must go through PAID → IN_PROGRESS → COMPLETED. Only the assigned technician can update the status.
-
-**বাংলা**: স্ট্যাটাস ফ্লো এনফোর্সমেন্ট। আপনি সরাসরি ACCEPTED থেকে COMPLETED এ যেতে পারেন না — আপনাকে PAID → IN_PROGRESS → COMPLETED দিয়ে যেতে হবে। শুধুমাত্র নির্ধারিত টেকনিশিয়ান স্ট্যাটাস আপডেট করতে পারে।
-
-**Valid transitions / বৈধ পরিবর্তন:**
+### Payment Flow / পেমেন্ট ফ্লো
 
 ```
-REQUESTED  →  ACCEPTED
-REQUESTED  →  DECLINED
-PAID       →  IN_PROGRESS
-IN_PROGRESS → COMPLETED
+1. CUSTOMER: POST /payments/create → { bookingId }
+   → Returns { clientSecret, payment }
+2. Frontend uses clientSecret to complete payment in Stripe Elements
+3. Stripe sends webhook → POST /payments/webhook (raw body)
+   OR CUSTOMER: POST /payments/confirm → { paymentIntentId }
 ```
-
----
-
-## 14. Payment Module / পেমেন্ট মডিউল
 
 ### `src/modules/payment/payment.service.ts`
 
-#### `createPaymentIntent`
+**`createPaymentIntent`:**
 
 ```ts
-export const createPaymentIntent = async (customerId, bookingId) => {
-  // 1. Validate booking
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { service: true },
-  });
-  if (!booking) throw new AppError(404, "Booking not found");
-  if (booking.customerId !== customerId) throw new AppError(403, "Not your booking");
-  if (booking.status !== "ACCEPTED") throw new AppError(400, "Booking must be accepted first");
-
-  // 2. Check not already paid
-  const existingPayment = await prisma.payment.findUnique({ where: { bookingId } });
-  if (existingPayment?.status === "COMPLETED") throw new AppError(400, "Already paid");
-
-  // 3. Convert price to cents (Stripe uses cents)
-  const amountInCents = Math.round(booking.service.price * 100);
-
+const createPaymentIntent = async (customerId, bookingId) => {
+  // 1. Validate: booking exists, belongs to customer, status is ACCEPTED
+  // 2. Check not already paid (COMPLETED)
+  // 3. Convert price to cents (Math.round(price * 100))
   // 4. Create Stripe PaymentIntent
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: amountInCents,
+  const paymentIntent = await getStripe().paymentIntents.create({
+    amount: amountInCents,     // e.g. 8050 for $80.50
     currency: "usd",
-    metadata: { bookingId },  // Store bookingId for webhook
+    metadata: { bookingId },   // Store bookingId for webhook
   });
-
-  // 5. Save to database (upsert in case previous attempt failed)
-  const payment = await prisma.payment.upsert({
-    where: { bookingId },
-    update: { amount: booking.service.price, transactionId: paymentIntent.id, status: "PENDING" },
-    create: { bookingId, amount: booking.service.price, transactionId: paymentIntent.id, status: "PENDING", userId: customerId },
-  });
-
-  return { clientSecret: paymentIntent.client_secret, payment };
+  // 5. Upsert payment record in DB
+  // 6. Return { clientSecret, payment }
 };
 ```
 
-| Step | English | বাংলা |
-|------|---------|-------|
-| 1 | Validate booking exists, belongs to customer, is ACCEPTED | বুকিং আছে, গ্রাহকের, এবং ACCEPTED কিনা যাচাই |
-| 2 | Prevent double payment | দ্বৈত পেমেন্ট প্রতিরোধ |
-| 3 | Convert $80 to 8000 cents | $80 কে 8000 সেন্টে রূপান্তর |
-| 4 | Create Stripe PaymentIntent | Stripe PaymentIntent তৈরি |
-| 5 | Save payment record to database | পেমেন্ট রেকর্ড ডাটাবেসে সেভ |
-
-**Why cents? / কেন সেন্ট?**
-Stripe doesn't accept fractional amounts like 80.50 — it wants 8050 (cents). We multiply by 100 and round.
-
-Stripe ভগ্নাংশ পরিমাণ যেমন 80.50 গ্রহণ করে না — এটি 8050 (সেন্ট) চায়। আমরা 100 দিয়ে গুণ করি এবং রাউন্ড করি।
-
----
-
-#### `confirmPayment`
+**`confirmPayment`:**
 
 ```ts
-export const confirmPayment = async (paymentIntentId) => {
-  // 1. Verify with Stripe
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-  if (paymentIntent.status !== "succeeded") {
-    throw new AppError(400, "Payment has not succeeded");
-  }
-
-  const bookingId = paymentIntent.metadata.bookingId;
-  if (!bookingId) throw new AppError(400, "No booking linked");
-
-  // 2. Update payment to COMPLETED
-  await prisma.payment.update({
-    where: { bookingId },
-    data: { status: "COMPLETED", transactionId: paymentIntent.id },
-  });
-
-  // 3. Update booking to PAID
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: "PAID" },
-  });
-
+const confirmPayment = async (paymentIntentId) => {
+  // 1. Verify with Stripe (retrieve payment intent)
+  // 2. Update payment status → COMPLETED
+  // 3. Update booking status → PAID
   return payment;
 };
 ```
 
-**English**: Two-step update. First marks the payment as COMPLETED, then marks the booking as PAID. Both updates are needed — the payment tracks money, the booking tracks the service lifecycle.
-
-**বাংলা**: দুই-পদক্ষেপ আপডেট। প্রথমে পেমেন্ট COMPLETED হয়, তারপর বুকিং PAID হয়। দুটি আপডেটই প্রয়োজন — পেমেন্ট টাকা ট্র্যাক করে, বুকিং সার্ভিস লাইফসাইকেল ট্র্যাক করে।
-
----
-
-#### `handleStripeWebhook`
+**`handleStripeWebhook`:**
 
 ```ts
-export const handleStripeWebhook = async (body, sig) => {
-  // 1. Verify the webhook signature (security!)
-  const event = stripe.webhooks.constructEvent(
-    body,
-    sig,
-    process.env.STRIPE_WEBHOOK_SECRET!
-  );
-
-  // 2. Handle successful payment
-  if (event.type === "payment_intent.succeeded") {
-    const paymentIntent = event.data.object as any;
-    await confirmPayment(paymentIntent.id);
-  }
-
+const handleStripeWebhook = async (body, sig) => {
+  // 1. Verify webhook signature using STRIPE_WEBHOOK_SECRET
+  const event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+  // 2. If event.type === "payment_intent.succeeded", call confirmPayment
   return { received: true };
 };
 ```
 
-**English**: Webhooks are Stripe calling OUR server when something happens. The signature verification (`constructEvent`) ensures the request actually came from Stripe, not a hacker pretending to be Stripe.
-
-**বাংলা**: ওয়েবহুক হল Stripe আমাদের সার্ভারকে কল করছে যখন কিছু ঘটে। সিগনেচার ভেরিফিকেশন (`constructEvent`) নিশ্চিত করে যে রিকোয়েস্টটি আসলেই Stripe থেকে এসেছে, কোন হ্যাকার Stripe সেজে নয়।
-
 ---
 
-## 15. Review Module / রিভিউ মডিউল
+## 16. Review Module / রিভিউ মডিউল
 
-### `src/modules/review/review.service.ts`
+### `src/modules/review/review.route.ts`
 
 ```ts
-export const createReview = async (data) => {
-  // 1. Find the booking
-  const booking = await prisma.booking.findUnique({ where: { id: data.bookingId } });
-  if (!booking) throw new AppError(404, "Booking not found");
-
-  // 2. Only the customer who made the booking can review
-  if (booking.customerId !== data.customerId) {
-    throw new AppError(403, "This booking does not belong to you");
-  }
-
-  // 3. Only completed bookings can be reviewed
-  if (booking.status !== "COMPLETED") {
-    throw new AppError(400, "You can only review completed bookings");
-  }
-
-  // 4. One review per booking
-  const existing = await prisma.review.findUnique({ where: { bookingId: data.bookingId } });
-  if (existing) throw new AppError(409, "You have already reviewed this booking");
-
-  // 5. Create review (technicianId comes from the booking)
-  const review = await prisma.review.create({
-    data: {
-      bookingId: data.bookingId,
-      customerId: data.customerId,
-      technicianId: booking.technicianId,
-      rating: data.rating,
-      comment: data.comment,
-    },
-    include: { booking: true, customer: true, technician: true },
-  });
-
-  return review;
-};
+router.post("/", auth(Role.CUSTOMER), validateRequest(createReviewRules), reviewController.create);
 ```
 
-| Check | Reason (English) | কারণ (বাংলা) |
-|-------|-------------------|--------------|
-| Booking exists | Can't review a non-existent booking | নেই এমন বুকিং রিভিউ করা যাবে না |
-| Owns booking | Can't review someone else's booking | অন্যের বুকিং রিভিউ করা যাবে না |
-| Booking COMPLETED | Can't review before job is done | কাজ শেষ হওয়ার আগে রিভিউ দেওয়া যাবে না |
+### `src/modules/review/review.validation.ts`
+
+```ts
+export const createReviewRules: ValidationRule[] = [
+  { field: "bookingId", required: true, type: "string", message: "Booking ID is required" },
+  { field: "rating", required: true, type: "number", min: 1, max: 5, message: "Rating must be between 1 and 5" },
+  { field: "comment", type: "string" },
+];
+```
+
+### Validation Checks / ভ্যালিডেশন চেক
+
+| Check | Reason | কারণ |
+|-------|--------|------|
+| Booking exists | Can't review non-existent booking | নেই এমন বুকিং রিভিউ করা যাবে না |
+| Owns booking | Can't review someone else's | অন্যের বুকিং রিভিউ করা যাবে না |
+| Booking COMPLETED | Can't review before job done | কাজ শেষ হওয়ার আগে রিভিউ দেওয়া যাবে না |
 | No existing review | One review per booking | প্রতি বুকিং এ একটি মাত্র রিভিউ |
+| Rating 1-5 | Validates rating range | রেটিং এর রেঞ্জ ভ্যালিডেট করে |
 
 ---
 
-## 16. Admin Module / অ্যাডমিন মডিউল
+## 17. Admin Module / অ্যাডমিন মডিউল
+
+### `src/modules/admin/admin.route.ts`
+
+```ts
+router.get("/users", auth(Role.ADMIN), adminController.getAllUsers);
+router.patch("/users/:id", auth(Role.ADMIN), adminController.updateUserBanStatus);
+router.get("/bookings", auth(Role.ADMIN), adminController.getAllBookings);
+router.get("/categories", auth(Role.ADMIN), adminController.getAllCategories);
+router.post("/categories", auth(Role.ADMIN), adminController.createCategory);
+```
 
 ### `src/modules/admin/admin.service.ts`
 
+**`getAllUsers` — Excludes password via `select`:**
+
 ```ts
-export const getAllUsers = async () => {
+const getAllUsers = async () => {
   return prisma.user.findMany({
-    select: {
-      id: true, name: true, email: true, role: true, isBanned: true, createdAt: true,
-      // NOTE: password is NOT selected! Security!
-    },
+    select: { id: true, name: true, email: true, role: true, isBanned: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
 };
 ```
 
-**English**: `select` explicitly chooses which fields to return. Notice `password` is NOT in the select — even admins should never see passwords.
-
-**বাংলা**: `select` স্পষ্টভাবে কোন ফিল্ড রিটার্ন করতে হবে তা বেছে নেয়। লক্ষ্য করুন `password` সিলেক্টে নেই — এমনকি অ্যাডমিনদেরও পাসওয়ার্ড দেখা উচিত নয়।
+**`updateUserBanStatus` — Cannot ban other admins:**
 
 ```ts
-export const updateUserBanStatus = async (userId, isBanned) => {
+const updateUserBanStatus = async (userId, isBanned) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new AppError(404, "User not found");
-  if (user.role === "ADMIN") throw new AppError(400, "Cannot ban an admin");  // Protection!
-
-  return prisma.user.update({
-    where: { id: userId },
-    data: { isBanned },
-    select: { id: true, name: true, email: true, role: true, isBanned: true },
-  });
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  if (user.role === "ADMIN") throw new AppError(httpStatus.BAD_REQUEST, "Cannot ban an admin");
+  // ... update user
 };
 ```
 
-**English**: Admins cannot ban other admins! This prevents accidental or malicious removal of admin access.
-
-**বাংলা**: অ্যাডমিনরা অন্য অ্যাডমিনকে ব্যান করতে পারে না! এটি দুর্ঘটনাজনিত বা দূষিতভাবে অ্যাডমিন অ্যাক্সেস সরানো প্রতিরোধ করে।
+**`getAllCategories` — Admin-only category management:**
 
 ```ts
-export const getAllBookings = async () => {
-  return prisma.booking.findMany({
-    include: {
-      service: true, customer: true, technician: true, payment: true, review: true,
-    },
-    orderBy: { id: "desc" },
+const getAllCategories = async () => {
+  return prisma.category.findMany({
+    include: { services: true },
+    orderBy: { name: "asc" },
   });
 };
 ```
 
-**English**: Admin sees everything — all bookings with all related data.
+**English**: The admin module also includes category management endpoints (`GET /admin/categories` and `POST /admin/categories`), duplicating some functionality from the Category module. This gives two ways to manage categories — through admin endpoints or public endpoints.
 
-**বাংলা**: অ্যাডমিন সব দেখে — সব সম্পর্কিত ডাটা সহ সব বুকিং।
+**বাংলা**: অ্যাডমিন মডিউলে ক্যাটাগরি ম্যানেজমেন্ট এন্ডপয়েন্টও রয়েছে (`GET /admin/categories` এবং `POST /admin/categories`), যা ক্যাটাগরি মডিউলের কিছু কার্যকারিতা ডুপ্লিকেট করে। এটি ক্যাটাগরি ম্যানেজ করার দুটি উপায় দেয় — অ্যাডমিন এন্ডপয়েন্ট বা পাবলিক এন্ডপয়েন্টের মাধ্যমে।
 
 ---
 
-## 17. Seed Script / সিড স্ক্রিপ্ট
+## 18. Seed Script / সিড স্ক্রিপ্ট
 
 ### `prisma/seed.ts`
 
 ```ts
-import { PrismaClient, Role } from "../../generated/prisma/client";
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import bcrypt from "bcrypt";
+import { PrismaClient } from "../generated/prisma/client";
+import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL!;
 const adapter = new PrismaPg({ connectionString });
@@ -1816,12 +1564,12 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@fixitnow.com" },
-    update: {},                              // Don't change if exists
+    update: {},
     create: {
       name: "Admin",
       email: "admin@fixitnow.com",
       password: hashedPassword,
-      role: Role.ADMIN,
+      role: "ADMIN",
     },
   });
 
@@ -1837,95 +1585,75 @@ main()
   });
 ```
 
-**English**: The seed script runs when you do `npm run prisma:seed`. It creates the admin user with email `admin@fixitnow.com` and password `admin123`. `upsert` means if the admin already exists, don't create another one.
+| Detail | Value |
+|--------|-------|
+| **Admin email** | `admin@fixitnow.com` |
+| **Admin password** | `admin123` |
+| **Run command** | `npm run prisma:seed` or `tsx prisma/seed.ts` |
+| **Hash algorithm** | bcryptjs with 10 salt rounds |
 
-**বাংলা**: সিড স্ক্রিপ্ট চলে যখন আপনি `npm run prisma:seed` করেন। এটি `admin@fixitnow.com` ইমেইল এবং `admin123` পাসওয়ার্ড দিয়ে অ্যাডমিন ইউজার তৈরি করে। `upsert` মানে যদি অ্যাডমিন আগে থেকে থাকে, তাহলে আরেকটি তৈরি করবে না।
+**English**: Uses `upsert` so running seed multiple times won't create duplicate admin. The seed script creates its own PrismaClient (not using the one from `src/lib/prisma.ts`) because it's a standalone script.
 
----
-
-## 18. Swagger / সোয়াগার
-
-### `src/swagger.ts`
-
-```ts
-import swaggerJsdoc from "swagger-jsdoc";
-
-const options: swaggerJsdoc.Options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "FixItNow API",
-      version: "1.0.0",
-      description: "Home Services Booking API...",
-    },
-    servers: [{ url: "/api" }],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    security: [{ bearerAuth: [] }],
-  },
-  apis: ["./src/app/modules/**/*.routes.ts"],
-};
-
-export const swaggerSpec = swaggerJsdoc(options);
-```
-
-**English**: Swagger auto-generates API documentation from the `@openapi` JSDoc comments in the route files. The `apis` pattern tells it where to find these comments. The `securitySchemes` defines JWT Bearer auth so the "Authorize" button appears in Swagger UI.
-
-**বাংলা**: Swagger রুট ফাইলগুলির `@openapi` JSDoc কমেন্ট থেকে অটোমেটিক্যালি API ডকুমেন্টেশন জেনারেট করে। `apis` প্যাটার্ন বলে যে এই কমেন্টগুলি কোথায় খুঁজবে। `securitySchemes` JWT Bearer অথ সংজ্ঞায়িত করে যাতে Swagger UI তে "Authorize" বাটন দেখা যায়।
+**বাংলা**: `upsert` ব্যবহার করে যাতে একাধিকবার সিড চালালেও ডুপ্লিকেট অ্যাডমিন তৈরি না হয়। সিড স্ক্রিপ্ট তার নিজস্ব PrismaClient তৈরি করে (`src/lib/prisma.ts` থেকে ব্যবহার না করে) কারণ এটি একটি স্বতন্ত্র স্ক্রিপ্ট।
 
 ---
 
 ## Architecture Summary / আর্কিটেকচার সারাংশ
 
-### Design Pattern: MVC-like / MVC-এর মতো ডিজাইন প্যাটার্ন
+### Design Pattern: Module-based MVC / মডিউল-ভিত্তিক MVC
 
 ```
 Route (router)  →  Middleware (validation, auth)  →  Controller  →  Service  →  Database (Prisma)
-    |                         |                          |              |
-   Defines URL               Validates/Protects        Handles       Business logic
-   and HTTP method            before reaching           request/       + DB queries
-                              the controller            response
+     |                         |                          |              |
+    Defines URL               Validates/Protects        Handles       Business logic
+    and HTTP method            before reaching           request/       + DB queries
+                               the controller            response
 ```
 
-### Data Flow Example: Create a Booking
+### Complete Data Flow: Create a Booking
 
 ```
-1. Customer sends POST /api/bookings with { serviceId }
-2. Route matches → auth("CUSTOMER") middleware runs
-   → Extracts JWT from header
-   → Verifies token → checks user is not banned
-   → Attaches { userId, role: "CUSTOMER" } to req.user
-3. validateRequest(createBookingSchema) middleware runs
+1. CUSTOMER sends POST /api/bookings with { serviceId }
+2. Route matches → auth(Role.CUSTOMER) middleware runs
+   → Checks req.cookies.accessToken OR Authorization header
+   → Verifies JWT → checks user exists & not banned
+   → Attaches { id, name, email, role } to req.user
+3. validateRequest(createBookingRules) middleware runs
    → Validates body has serviceId
 4. bookingController.create runs
-   → Calls bookingService.createBooking({ customerId, serviceId })
+   → Calls bookingService.createBooking({ customerId: req.user.id, serviceId, scheduleDate })
 5. bookingService.createBooking runs
-   → Finds the service → gets technicianId
-   → Creates booking in database
-   → Returns booking data
+   → Finds the service → gets technicianId from service
+   → Creates booking in database with status REQUESTED
+   → Returns booking with service, customer, technician data
 6. Controller sends 201 response with booking data
 ```
 
-### File Organization Principle / ফাইল সংগঠনের নীতি
+### File Organization / ফাইল সংগঠন
 
 ```
 src/modules/<module-name>/
 ├── <module-name>.service.ts     →  Business logic + DB queries
 ├── <module-name>.controller.ts  →  Request/response handling
 ├── <module-name>.routes.ts      →  Route definitions + middleware chains
-└── <module-name>.validation.ts  →  Zod input validation schemas
+├── <module-name>.validation.ts  →  ValidationRule arrays (instead of Zod)
+└── <module-name>.interface.ts   →  TypeScript interfaces (optional)
 ```
 
-Each module is **self-contained** — it has its own routes, controller, service, and validation. This makes the code easy to navigate and maintain.
+### Key Differences From Common Patterns / সাধারণ প্যাটার্ন থেকে মূল পার্থক্য
 
-প্রতিটি মডিউল **স্বয়ংসম্পূর্ণ** — এর নিজস্ব রুট, কন্ট্রোলার, সার্ভিস এবং ভ্যালিডেশন আছে। এটি কোড নেভিগেট এবং রক্ষণাবেক্ষণ সহজ করে তোলে.
+| Aspect | This Project | Common Pattern |
+|--------|-------------|---------------|
+| **Validation** | Custom `ValidationRule[]` middleware | Zod (`z.object`) |
+| **`sendResponse`** | Single object param `({ success, statusCode, message, data })` | Multiple params `(res, code, msg, data)` |
+| **Auth token source** | Cookie FIRST, then Bearer header | Usually only Bearer header |
+| **`req.user`** | `{ id, name, email, role }` | Usually `{ userId, role }` |
+| **Password omission** | `omit: { password: true }` (Prisma 7 feature) | `select: { ...all fields except password }` |
+| **Stripe client** | Singleton via `getStripe()` function | Direct `new Stripe(key)` at module level |
+| **Status codes** | `httpStatus.OK`, `httpStatus.NOT_FOUND`, etc. | Raw numbers (200, 404, etc.) |
+| **Error handling** | Only `AppError` and generic `Error` | Often includes Zod error handling |
+| **Controller exports** | Named object `export const xController = { ... }` | Multiple named function exports |
+| **Auto-create tech profile** | NOT done on registration | Usually auto-created on TECHNICIAN registration |
 
 ---
 
@@ -1933,17 +1661,17 @@ Each module is **self-contained** — it has its own routes, controller, service
 
 | Concept | English | বাংলা |
 |---------|---------|-------|
-| **ES Modules** | `import`/`export` instead of `require`/`module.exports` | `require`/`module.exports` এর পরিবর্তে `import`/`export` |
-| **Middleware** | Functions that run before route handler | ফাংশন যা রুট হ্যান্ডলারের আগে চলে |
-| **JWT** | JSON Web Token for stateless authentication | স্টেটলেস অথেনটিকেশনের জন্য JSON Web Token |
-| **bcrypt** | Password hashing library | পাসওয়ার্ড হ্যাশিং লাইব্রেরি |
-| **Zod** | Runtime validation library | রানটাইম ভ্যালিডেশন লাইব্রেরি |
-| **Prisma** | Type-safe database ORM | টাইপ-সেফ ডাটাবেস ORM |
-| **Stripe** | Payment processing API | পেমেন্ট প্রসেসিং API |
-| **catchAsync** | Wrapper that catches async errors | async এরর ক্যাচ করার র‍্যাপার |
-| **sendResponse** | Standardized success response | স্ট্যান্ডার্ডাইজড সাকসেস রেসপন্স |
-| **AppError** | Custom error with HTTP status code | HTTP স্ট্যাটাস কোড সহ কাস্টম এরর |
-| **upsert** | Update + Insert (create or update) | আপডেট + ইনসার্ট (তৈরি বা আপডেট) |
+| **ES Modules** | `import`/`export` instead of `require` | `require` এর পরিবর্তে `import`/`export` |
+| **Module pattern** | Each module is self-contained with .routes, .controller, .service, .validation | প্রতিটি মডিউল স্বয়ংসম্পূর্ণ |
+| **Custom validation** | Rule-based validation instead of Zod | Zod এর পরিবর্তে রুল-বেসড ভ্যালিডেশন |
+| **JWT dual tokens** | Access token (1d) + Refresh token (30d) | অ্যাক্সেস টোকেন (1d) + রিফ্রেশ টোকেন (30d) |
+| **Cookie auth** | Tokens stored in httpOnly cookies and Bearer header | httpOnly কুকি এবং Bearer হেডারে টোকেন |
+| **Prisma 7 omit** | `omit: { password: true }` to exclude fields | ফিল্ড বাদ দিতে `omit: { password: true }` |
+| **Status transitions** | Explicit `validTransitions` object for booking flow | বুকিং ফ্লোর জন্য স্পষ্ট `validTransitions` অবজেক্ট |
+| **Stripe webhook** | Raw body parser before JSON parser | JSON parser এর আগে raw body পার্সার |
+| **catchAsync** | try/catch wrapper for async handlers | async হ্যান্ডলারের জন্য try/catch র‍্যাপার |
+| **AppError** | Custom error with httpStatus codes | httpStatus কোড সহ কাস্টম এরর |
+| **Singleton pattern** | Single Prisma + Stripe instances | একক Prisma + Stripe instance |
 
 ---
 
