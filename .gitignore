@@ -2,7 +2,6 @@
 node_modules/
 
 # Build outputs (Vercel নিজে বিল্ড করবে)
-dist/
 build/
 .next/
 out/
