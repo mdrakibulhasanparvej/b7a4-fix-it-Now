@@ -9,7 +9,6 @@ out/
 
 # Environment variables (খুবই গুরুত্বপূর্ণ!)
 .env
-.env.example
 
 # Logs
 *.log
@@ -24,6 +23,9 @@ Thumbs.db
 # Prisma (আপনি যদি নিজে জেনারেট করেন)
 # যদি prisma client সার্ভারে অটো-জেনারেট হয়, তবে এটি ইগনোর করা ভালো
 /node_modules/.prisma/
+
+# Vercel
+.vercel/
 
 # Editor settings
 .vscode/

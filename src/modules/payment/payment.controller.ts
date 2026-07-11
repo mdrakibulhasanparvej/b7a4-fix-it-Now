@@ -41,7 +41,7 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
 
 const getById = catchAsync(async (req: Request, res: Response) => {
   const payment = await paymentService.getPaymentById(
-    req.params.id,
+    req.params.id as string,
     req.user!.id,
   );
   sendResponse(res, {

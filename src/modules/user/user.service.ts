@@ -4,6 +4,7 @@ import config from "../../config";
 import { RegisterUserPayload } from "./user.interface";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
+import { Role } from "../../../generated/prisma/enums";
 
 const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, role } = payload;
@@ -30,7 +31,7 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "CUSTOMER",
+      role: (role || "CUSTOMER") as Role,
     },
   });
 

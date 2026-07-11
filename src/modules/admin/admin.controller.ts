@@ -16,7 +16,7 @@ const getAllUsers = catchAsync(async (_req: Request, res: Response) => {
 
 const updateUserBanStatus = catchAsync(async (req: Request, res: Response) => {
   const user = await adminService.updateUserBanStatus(
-    req.params.id,
+    req.params.id as string,
     req.body.isBanned,
   );
   sendResponse(res, {

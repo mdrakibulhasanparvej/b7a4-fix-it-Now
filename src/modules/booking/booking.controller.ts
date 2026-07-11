@@ -33,7 +33,7 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
 
 const getById = catchAsync(async (req: Request, res: Response) => {
   const booking = await bookingService.getBookingById(
-    req.params.id,
+    req.params.id as string,
     req.user!.id,
     req.user!.role,
   );
@@ -47,7 +47,7 @@ const getById = catchAsync(async (req: Request, res: Response) => {
 
 const cancel = catchAsync(async (req: Request, res: Response) => {
   const booking = await bookingService.cancelBooking(
-    req.params.id,
+    req.params.id as string,
     req.user!.id,
   );
   sendResponse(res, {

@@ -21,7 +21,7 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getById = catchAsync(async (req: Request, res: Response) => {
-  const service = await serviceService.getServiceById(req.params.id);
+  const service = await serviceService.getServiceById(req.params.id as string);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -45,7 +45,7 @@ const create = catchAsync(async (req: Request, res: Response) => {
 
 const update = catchAsync(async (req: Request, res: Response) => {
   const service = await serviceService.updateService(
-    req.params.id,
+    req.params.id as string,
     req.user!.id,
     req.body,
   );
@@ -58,7 +58,7 @@ const update = catchAsync(async (req: Request, res: Response) => {
 });
 
 const remove = catchAsync(async (req: Request, res: Response) => {
-  await serviceService.deleteService(req.params.id, req.user!.id);
+  await serviceService.deleteService(req.params.id as string, req.user!.id);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

@@ -88,7 +88,7 @@ export const validateRequest = (rules: ValidationRule[]) => {
     }
 
     if (errors.length > 0) {
-      return next(new AppError(httpStatus.BAD_REQUEST, errors[0].message));
+      return next(new AppError(httpStatus.BAD_REQUEST, errors[0]!.message));
     }
 
     next();

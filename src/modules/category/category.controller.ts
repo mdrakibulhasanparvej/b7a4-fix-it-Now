@@ -15,7 +15,7 @@ const getAll = catchAsync(async (_req: Request, res: Response) => {
 });
 
 const getById = catchAsync(async (req: Request, res: Response) => {
-  const category = await categoryService.getCategoryById(req.params.id);
+  const category = await categoryService.getCategoryById(req.params.id as string);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -35,7 +35,7 @@ const create = catchAsync(async (req: Request, res: Response) => {
 });
 
 const update = catchAsync(async (req: Request, res: Response) => {
-  const category = await categoryService.updateCategory(req.params.id, req.body);
+  const category = await categoryService.updateCategory(req.params.id as string, req.body);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -45,7 +45,7 @@ const update = catchAsync(async (req: Request, res: Response) => {
 });
 
 const remove = catchAsync(async (req: Request, res: Response) => {
-  await categoryService.deleteCategory(req.params.id);
+  await categoryService.deleteCategory(req.params.id as string);
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
