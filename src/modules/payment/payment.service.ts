@@ -3,6 +3,8 @@ import { AppError } from "../../errors/AppError";
 import { getStripe } from "../../utils/stripe";
 import httpStatus from "http-status";
 
+// The paymentService object provides methods for managing payments in the application. It includes functions to create a payment intent, confirm a payment, retrieve payments for a specific user, get payment details by ID, and handle Stripe webhook events. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const createPaymentIntent = async (customerId: string, bookingId: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -59,8 +61,11 @@ const createPaymentIntent = async (customerId: string, bookingId: string) => {
   return { clientSecret: paymentIntent.client_secret, payment };
 };
 
+// The confirmPayment function confirms a payment by checking the status of the payment intent retrieved from Stripe. It takes a paymentIntentId as a parameter and retrieves the corresponding payment intent from Stripe. If the payment intent status is not "succeeded", it throws an AppError indicating that the payment has not succeeded. It then retrieves the bookingId from the payment intent metadata and updates the payment record in the database to mark it as "COMPLETED". Finally, it updates the associated booking status to "PAID" and returns the updated payment information.
+
 const confirmPayment = async (paymentIntentId: string) => {
-  const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId);
+  const paymentIntent =
+    await getStripe().paymentIntents.retrieve(paymentIntentId);
 
   if (paymentIntent.status !== "succeeded") {
     throw new AppError(httpStatus.BAD_REQUEST, "Payment has not succeeded");
@@ -84,6 +89,8 @@ const confirmPayment = async (paymentIntentId: string) => {
   return payment;
 };
 
+// The getMyPayments function retrieves payments for a specific user based on their userId. It takes a userId as a parameter and queries the database for payments associated with the user. The function includes related information such as the associated booking and service, and orders the results by payment ID in descending order.
+
 const getMyPayments = async (userId: string) => {
   return prisma.payment.findMany({
     where: { userId },
@@ -95,6 +102,8 @@ const getMyPayments = async (userId: string) => {
     orderBy: { id: "desc" },
   });
 };
+
+// The getPaymentById function retrieves payment details by payment ID and user ID. It takes a paymentId and userId as parameters and queries the database for the corresponding payment record. If the payment is not found, it throws an AppError with a not found status code. If the user is not authorized to view the payment (i.e., they are not the owner of the payment), it throws an AppError with a forbidden status code. If the checks pass, it returns the payment details along with related information such as the associated booking and service.
 
 const getPaymentById = async (paymentId: string, userId: string) => {
   const payment = await prisma.payment.findUnique({
@@ -116,6 +125,8 @@ const getPaymentById = async (paymentId: string, userId: string) => {
 
   return payment;
 };
+
+// The handleStripeWebhook function handles Stripe webhook events. It takes the raw request body and the Stripe signature as parameters, constructs the event using the Stripe library, and checks the event type. If the event type is "payment_intent.succeeded", it retrieves the payment intent from the event data and calls the confirmPayment function to confirm the payment. Finally, it returns a response indicating that the webhook event was received.
 
 const handleStripeWebhook = async (body: Buffer, sig: string) => {
   const event = getStripe().webhooks.constructEvent(
