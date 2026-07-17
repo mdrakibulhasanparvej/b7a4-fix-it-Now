@@ -2,6 +2,8 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 
+// The serviceService object provides methods for managing services in the application. It includes functions to retrieve all services, get a service by ID, create a new service, update an existing service, and delete a service. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const getAllServices = async (filters: {
   categoryId?: string;
   minPrice?: number;
@@ -39,6 +41,8 @@ const getAllServices = async (filters: {
   });
 };
 
+// serviceService provides methods for managing services in the application. It includes functions to retrieve all services, get a service by ID, create a new service, update an existing service, and delete a service. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const getServiceById = async (id: string) => {
   const service = await prisma.service.findUnique({
     where: { id },
@@ -54,6 +58,8 @@ const getServiceById = async (id: string) => {
   }
   return service;
 };
+
+// The createService function creates a new service in the database. It takes an object containing the service title, description, price, categoryId, and technicianId as a parameter. Before creating the service, it checks if the specified category exists. If the category does not exist, it throws an AppError with a not found status code. If the category exists, it creates the new service and returns the created service information along with its associated category and technician (excluding their passwords).
 
 const createService = async (data: {
   title: string;
@@ -79,6 +85,8 @@ const createService = async (data: {
     },
   });
 };
+
+// The updateService function updates an existing service in the database. It takes the service ID, technician ID, and an object containing the updated service title, description, and price as parameters. The function first checks if the specified service exists. If the service does not exist, it throws an AppError with a not found status code. It then checks if the service belongs to the specified technician. If it does not, it throws an AppError with a forbidden status code. If both checks pass, it updates the service with the provided data and returns the updated service information along with its associated category and technician (excluding their passwords).
 
 const updateService = async (
   id: string,
@@ -107,6 +115,8 @@ const updateService = async (
     },
   });
 };
+
+// The deleteService function deletes an existing service from the database. It takes the service ID and technician ID as parameters. The function first checks if the specified service exists. If the service does not exist, it throws an AppError with a not found status code. It then checks if the service belongs to the specified technician. If it does not, it throws an AppError with a forbidden status code. If both checks pass, it deletes the service and returns a success message.
 
 const deleteService = async (id: string, technicianId: string) => {
   const service = await prisma.service.findUnique({ where: { id } });
