@@ -16,6 +16,8 @@ import { adminRoutes } from "../modules/admin/admin.route";
 
 const router = Router();
 
+// The moduleRoutes array defines the routes for different modules in the application. Each route is associated with a specific path and the corresponding route handler. The routes include authentication, user management, category management, service management, technician management (including profile, availability, and bookings), booking management, payment processing, review management, and admin functionalities. The router uses these routes to handle incoming requests and direct them to the appropriate module for processing.
+
 const moduleRoutes = [
   { path: "/auth", route: authRoutes },
   { path: "/users", route: userRouter },

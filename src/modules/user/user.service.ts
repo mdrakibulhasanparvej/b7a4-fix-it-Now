@@ -6,11 +6,16 @@ import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 import { Role } from "../../../generated/prisma/enums";
 
+// The userService object provides methods for managing user-related operations in the application. It includes functions to register a new user, retrieve the authenticated user's profile, and update the authenticated user's profile. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const registerUserIntoDB = async (payload: RegisterUserPayload) => {
   const { name, email, password, role } = payload;
 
   if (!name || !email || !password) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Name, email, and password are required");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Name, email, and password are required",
+    );
   }
 
   const isUserExist = await prisma.user.findUnique({
@@ -44,6 +49,8 @@ const registerUserIntoDB = async (payload: RegisterUserPayload) => {
 
   return user;
 };
+
+// The getMyProfileFromDB function retrieves the profile of a user from the database based on their userId. It takes a userId as a parameter and queries the database for the corresponding user record. If the user is not found, it throws an AppError with a not found status code. If the user is found, it returns the user information without the password field.
 
 const getMyProfileFromDB = async (userId: string) => {
   const user = await prisma.user.findUniqueOrThrow({
