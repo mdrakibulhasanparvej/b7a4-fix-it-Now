@@ -2,6 +2,8 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 
+// The reviewService object provides methods for managing reviews in the application. It includes a function to create a new review for a completed booking. The createReview function checks if the booking exists, verifies that the booking belongs to the customer, ensures that the booking is completed, and checks if a review already exists for the booking. If all checks pass, it creates a new review in the database and returns the created review information along with related data such as the associated booking, customer, and technician.
+
 const createReview = async (data: {
   bookingId: string;
   customerId: string;
@@ -29,6 +31,8 @@ const createReview = async (data: {
       "You can only review completed bookings",
     );
   }
+
+  // Check if a review already exists for this booking
 
   const existing = await prisma.review.findUnique({
     where: { bookingId: data.bookingId },
