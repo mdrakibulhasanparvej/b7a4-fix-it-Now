@@ -6,6 +6,8 @@ import { jwtUtils } from "../../utils/jwt";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 
+// The authService object provides methods for user authentication and registration. It includes functions to log in a user, register a new user, and retrieve the authenticated user's information. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const loginUser = async (payload: LoginPayload) => {
   const { email, password } = payload;
 
@@ -48,6 +50,8 @@ const loginUser = async (payload: LoginPayload) => {
   return { accessToken, refreshToken };
 };
 
+// The registerUser function registers a new user in the database. It takes a RegisterPayload object containing the user's name, email, password, and optional role. The function first checks if a user with the provided email already exists. If so, it throws an AppError with a conflict status code. If not, it hashes the password using bcrypt and creates a new user record in the database with the provided information. The newly created user information is returned without the password field.
+
 const registerUser = async (payload: RegisterPayload) => {
   const { name, email, password, role } = payload;
 
@@ -73,6 +77,8 @@ const registerUser = async (payload: RegisterPayload) => {
 
   return user;
 };
+
+// The getMe function retrieves the authenticated user's information from the database based on their userId. It takes a userId as a parameter and queries the database for the corresponding user record. If the user is not found, it throws an AppError with a not found status code. If the user is found, it returns the user information without the password field.
 
 const getMe = async (userId: string) => {
   const user = await prisma.user.findUnique({
