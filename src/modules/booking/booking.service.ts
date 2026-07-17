@@ -2,6 +2,8 @@ import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import httpStatus from "http-status";
 
+// The bookingService object provides methods for managing bookings in the application. It includes functions to create a new booking, retrieve bookings for a specific user, get booking details by ID, and cancel a booking. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
+
 const createBooking = async (data: {
   customerId: string;
   serviceId: string;
@@ -32,6 +34,8 @@ const createBooking = async (data: {
   return booking;
 };
 
+// The getMyBookings function retrieves bookings for a specific user based on their userId and role. It takes a userId and role as parameters and queries the database for bookings associated with the user. If the user is a customer, it retrieves bookings where they are the customer; if they are a technician, it retrieves bookings where they are the technician. The function includes related information such as the associated service, customer, technician, payment, and review, and orders the results by booking ID in descending order.
+
 const getMyBookings = async (userId: string, role: string) => {
   const where =
     role === "CUSTOMER"
@@ -52,6 +56,8 @@ const getMyBookings = async (userId: string, role: string) => {
     orderBy: { id: "desc" },
   });
 };
+
+// The getBookingById function retrieves booking details by booking ID, user ID, and role. It takes a bookingId, userId, and role as parameters and queries the database for the corresponding booking record. If the booking is not found, it throws an AppError with a not found status code. If the user is a customer or technician, it checks if they are authorized to view the booking based on their role and associated IDs. If they are not authorized, it throws an AppError with a forbidden status code. If the checks pass, it returns the booking details along with related information such as the associated service, customer, technician, payment, and review.
 
 const getBookingById = async (
   bookingId: string,
@@ -89,6 +95,8 @@ const getBookingById = async (
 
   return booking;
 };
+
+// The cancelBooking function allows a customer to cancel their own booking based on the booking ID and customer ID. It first checks if the booking exists and if the customer is authorized to cancel it. It also verifies that the booking is in a cancellable status (REQUESTED, ACCEPTED, or PAID). If any of these checks fail, it throws an AppError with the appropriate HTTP status code and message. If the checks pass, it updates the booking status to CANCELLED and returns the updated booking details along with related information such as the associated service, customer, and technician.
 
 const cancelBooking = async (bookingId: string, customerId: string) => {
   const booking = await prisma.booking.findUnique({
