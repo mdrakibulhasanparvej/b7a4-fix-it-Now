@@ -4,6 +4,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import { technicianService } from "./technician.service";
 import httpStatus from "http-status";
 
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 const getAll = catchAsync(async (req: Request, res: Response) => {
   const { search, categoryId, minExperience, sort } = req.query;
   const technicians = await technicianService.getAllTechnicians({
@@ -20,6 +21,7 @@ const getAll = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 const getById = catchAsync(async (req: Request, res: Response) => {
   const technician = await technicianService.getTechnicianById(req.params.id as string);
   sendResponse(res, {
@@ -30,6 +32,7 @@ const getById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const profile = await technicianService.updateProfile(
     req.user!.id,
@@ -42,6 +45,8 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
     data: profile,
   });
 });
+
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 
 const updateAvailability = catchAsync(async (req: Request, res: Response) => {
   const profile = await technicianService.updateAvailability(
@@ -56,6 +61,7 @@ const updateAvailability = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 const getMyBookings = catchAsync(async (req: Request, res: Response) => {
   const bookings = await technicianService.getMyBookings(req.user!.id);
   sendResponse(res, {
@@ -66,6 +72,8 @@ const getMyBookings = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// The `catchAsync` function is a higher-order function that takes an asynchronous Express request handler (fn) as an argument and returns a new request handler. The returned handler wraps the original handler in a try-catch block to catch any errors that may occur during its execution. If an error is caught, it is passed to the next middleware function (next) for centralized error handling.
 const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
   const booking = await technicianService.updateBookingStatus(
     req.params.id as string,
