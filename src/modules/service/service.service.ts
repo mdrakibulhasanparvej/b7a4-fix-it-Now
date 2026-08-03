@@ -9,6 +9,7 @@ const getAllServices = async (filters: {
   minPrice?: number;
   maxPrice?: number;
   search?: string;
+  sort?: string;
 }) => {
   const where: any = {};
 
@@ -26,8 +27,18 @@ const getAllServices = async (filters: {
     where.OR = [
       { title: { contains: filters.search, mode: "insensitive" } },
       { description: { contains: filters.search, mode: "insensitive" } },
+      {
+        category: { name: { contains: filters.search, mode: "insensitive" } },
+      },
+      {
+        technician: { name: { contains: filters.search, mode: "insensitive" } },
+      },
     ];
   }
+
+  let orderBy: any = { id: "desc" };
+  if (filters.sort === "price-asc") orderBy = { price: "asc" };
+  if (filters.sort === "price-desc") orderBy = { price: "desc" };
 
   return prisma.service.findMany({
     where,
@@ -37,7 +48,7 @@ const getAllServices = async (filters: {
         omit: { password: true },
       },
     },
-    orderBy: { id: "desc" },
+    orderBy,
   });
 };
 

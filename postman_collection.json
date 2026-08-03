@@ -55,6 +55,14 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
             "url": "{{base_url}}/api/auth/me"
           }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{base_url}}/api/auth/logout"
+          }
         }
       ]
     },

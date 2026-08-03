@@ -4,14 +4,68 @@ import httpStatus from "http-status";
 
 // The technicianService object provides methods for managing technicians in the application. It includes functions to retrieve all technicians, get a technician by ID, update a technician's profile and availability, retrieve a technician's bookings, and update the status of a booking. Each method interacts with the database using Prisma and handles potential errors by throwing AppError instances with appropriate HTTP status codes and messages.
 
-const getAllTechnicians = async () => {
+const getAllTechnicians = async (filters: {
+  search?: string;
+  categoryId?: string;
+  minExperience?: number;
+  sort?: string;
+}) => {
+  const where: any = { role: "TECHNICIAN", isBanned: false };
+
+  if (filters.categoryId) {
+    where.services = { some: { categoryId: filters.categoryId } };
+  }
+
+  if (filters.minExperience !== undefined) {
+    where.technicianProfile = {
+      experienceYears: { gte: filters.minExperience },
+    };
+  }
+
+  if (filters.search) {
+    where.OR = [
+      { name: { contains: filters.search, mode: "insensitive" } },
+      { email: { contains: filters.search, mode: "insensitive" } },
+      {
+        technicianProfile: {
+          bio: { contains: filters.search, mode: "insensitive" },
+        },
+      },
+      {
+        services: {
+          some: { title: { contains: filters.search, mode: "insensitive" } },
+        },
+      },
+      {
+        services: {
+          some: {
+            category: {
+              name: { contains: filters.search, mode: "insensitive" },
+            },
+          },
+        },
+      },
+    ];
+  }
+
+  let orderBy: any = { name: "asc" };
+  if (filters.sort === "experience") {
+    orderBy = { technicianProfile: { experienceYears: "desc" } };
+  }
+  if (filters.sort === "services") {
+    orderBy = { services: { _count: "desc" } };
+  }
+
   return prisma.user.findMany({
-    where: { role: "TECHNICIAN", isBanned: false },
+    where,
     omit: { password: true },
     include: {
       technicianProfile: true,
-      services: true,
+      services: {
+        include: { category: true },
+      },
     },
+    orderBy,
   });
 };
 

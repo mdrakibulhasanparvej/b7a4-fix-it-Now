@@ -72,6 +72,16 @@
             ],
             "url": "{{base_url}}/api/auth/me"
           }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/auth/logout"
+          }
         }
       ]
     },
@@ -183,7 +193,7 @@
           "name": "Get All Services",
           "request": {
             "method": "GET",
-            "url": "{{base_url}}/api/services?search=paint&minPrice=50&maxPrice=200"
+            "url": "{{base_url}}/api/services?search=paint&categoryId=REPLACE_WITH_CATEGORY_ID&minPrice=50&maxPrice=200&sort=price-asc"
           }
         },
         {
@@ -242,7 +252,7 @@
           "name": "Get All Technicians",
           "request": {
             "method": "GET",
-            "url": "{{base_url}}/api/technicians"
+            "url": "{{base_url}}/api/technicians?search=&categoryId=REPLACE_WITH_CATEGORY_ID&minExperience=3&sort=experience"
           }
         },
         {
@@ -338,6 +348,16 @@
           }
         },
         {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/bookings/REPLACE_WITH_BOOKING_ID"
+          }
+        },
+        {
           "name": "Cancel Booking",
           "request": {
             "method": "PATCH",
@@ -390,6 +410,34 @@
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": "{{base_url}}/api/payments"
+          }
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": "{{base_url}}/api/payments/REPLACE_WITH_PAYMENT_ID"
+          }
+        },
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "stripe-signature",
+                "value": "REPLACE_WITH_STRIPE_SIGNATURE"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_REPLACE_WITH_EVENT_ID\",\n  \"type\": \"checkout.session.completed\"\n}"
+            },
+            "url": "{{base_url}}/api/payments/webhook"
           }
         }
       ]

@@ -21,6 +21,7 @@ const loginRules: ValidationRule[] = [
 
 router.post("/register", validateRequest(registerRules), authController.registerUser);
 router.post("/login", validateRequest(loginRules), authController.loginUser);
+router.post("/logout", authController.logoutUser);
 router.get("/me", auth(Role.CUSTOMER, Role.TECHNICIAN, Role.ADMIN), authController.getMe);
 
 export const authRoutes = router;

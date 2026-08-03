@@ -5,12 +5,13 @@ import { serviceService } from "./service.service";
 import httpStatus from "http-status";
 
 const getAll = catchAsync(async (req: Request, res: Response) => {
-  const { categoryId, minPrice, maxPrice, search } = req.query;
+  const { categoryId, minPrice, maxPrice, search, sort } = req.query;
   const services = await serviceService.getAllServices({
     categoryId: categoryId as string | undefined,
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
     search: search as string | undefined,
+    sort: sort as string | undefined,
   });
   sendResponse(res, {
     success: true,

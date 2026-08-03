@@ -4,8 +4,14 @@ import { sendResponse } from "../../utils/sendResponse";
 import { technicianService } from "./technician.service";
 import httpStatus from "http-status";
 
-const getAll = catchAsync(async (_req: Request, res: Response) => {
-  const technicians = await technicianService.getAllTechnicians();
+const getAll = catchAsync(async (req: Request, res: Response) => {
+  const { search, categoryId, minExperience, sort } = req.query;
+  const technicians = await technicianService.getAllTechnicians({
+    search: search as string | undefined,
+    categoryId: categoryId as string | undefined,
+    minExperience: minExperience ? Number(minExperience) : undefined,
+    sort: sort as string | undefined,
+  });
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

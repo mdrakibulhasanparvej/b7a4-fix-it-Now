@@ -41,6 +41,26 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const logoutUser = catchAsync(async (_req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none",
+  });
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "User logged out successfully",
+    data: null,
+  });
+});
+
 const getMe = catchAsync(async (req: Request, res: Response) => {
   const user = await authService.getMe(req.user!.id);
 
@@ -55,5 +75,6 @@ const getMe = catchAsync(async (req: Request, res: Response) => {
 export const authController = {
   loginUser,
   registerUser,
+  logoutUser,
   getMe,
 };
